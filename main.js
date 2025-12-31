@@ -1,6 +1,5 @@
 const { app, BrowserWindow, Tray, Menu } = require("electron");
 const path = require("path");
-require("./server/webServer");
 
 let win;
 let tray;
@@ -33,4 +32,8 @@ app.whenReady().then(() => {
   ]));
 
   tray.on("double-click", () => win.show());
+});
+
+app.whenReady().then(() => {
+  require("./server/webServer");
 });
