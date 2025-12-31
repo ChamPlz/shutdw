@@ -24,7 +24,8 @@
       "output": "dist"
     },
     "files": [
-      "**/*"
+      "**/*",
+      "!data"
     ],
     "win": {
       "target": "nsis",

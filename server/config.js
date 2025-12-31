@@ -4,7 +4,7 @@ const path = require("path");
 const configPath = path.join(__dirname, "../data/config.json");
 
 const defaultConfig = {
-  pin: "1234",
+  pin: "1234567",
   scheduledAt: null
 };
 
