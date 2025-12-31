@@ -1,10 +1,10 @@
 {
-  "name": "controle-desligamento",
+  "name": "ShutDW",
   "version": "1.0.0",
   "description": "App Electron para desligar/reiniciar o Windows com acesso web",
   "main": "main.js",
-  "author": "Carlos Caldeira",
-  "license": "MIT",
+  "author": "ChamPlz",
+  "license": "Licença propria",
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
