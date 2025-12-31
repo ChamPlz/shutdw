@@ -1,4 +1,4 @@
-# ⚡ Controle de Energia
+# ⚡ ShutDW
 
 Um aplicativo moderno para **desligar o computador remotamente**, **agendar desligamentos** e **controlar tudo pelo celular** através de uma interface web simples e segura.
 
@@ -24,7 +24,7 @@ Um aplicativo moderno para **desligar o computador remotamente**, **agendar desl
 
 ## 📸 Screenshots
 
-> *(adicione imagens aqui depois)*
+> 
 
 ---
 
@@ -62,7 +62,7 @@ O próprio app exibe:
 ### Instalação
 
 ```bash
-git clone https://github.com/seu-usuario/controle-de-energia.git
+git clone https://github.com/ChamPlz/shutdw.git
 cd controle-de-energia
 npm install 
 ```
