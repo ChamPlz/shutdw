@@ -2,7 +2,7 @@
 
 Um aplicativo moderno para **desligar o computador remotamente**, **agendar desligamentos** e **controlar tudo pelo celular** através de uma interface web simples e segura.
 
-> Ideal para quem deixa o PC ligado, servidores caseiros, homelab, pais que querem controlar horários ou simplesmente não querem levantar da cama 😄
+> Ideal para quem deixa o PC ligado, pais que querem controlar horários ou simplesmente não querem levantar da cama 😄
 
 ---
 
