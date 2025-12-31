@@ -1,0 +1,38 @@
+{
+  "name": "controle-desligamento",
+  "version": "1.0.0",
+  "description": "App Electron para desligar/reiniciar o Windows com acesso web",
+  "main": "main.js",
+  "author": "Carlos Caldeira",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.carlos.controledesligamento",
+    "productName": "Controle de Desligamento",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
