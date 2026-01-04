@@ -1,4 +1,5 @@
-const { app, BrowserWindow, Tray, Menu } = require("electron");
+const { app, BrowserWindow, Tray, Menu, dialog } = require("electron");
+const { autoUpdater } = require('electron-updater');
 const path = require("path");
 
 let win;
@@ -36,4 +37,46 @@ app.whenReady().then(() => {
 
 app.whenReady().then(() => {
   require("./server/webServer");
+
+  // Auto-updater: only run in packaged builds
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify();
+
+    autoUpdater.on('checking-for-update', () => {
+      console.log('Checking for updates...');
+    });
+
+    autoUpdater.on('update-available', info => {
+      console.log('Update available:', info.version);
+    });
+
+    autoUpdater.on('update-not-available', () => {
+      console.log('No update available');
+    });
+
+    autoUpdater.on('error', err => {
+      console.error('AutoUpdater error:', err);
+    });
+
+    autoUpdater.on('download-progress', progress => {
+      console.log(`Download progress: ${Math.round(progress.percent)}%`);
+    });
+
+    autoUpdater.on('update-downloaded', async (info) => {
+      const result = await dialog.showMessageBox(win, {
+        type: 'info',
+        buttons: ['Instalar e reiniciar', 'Depois'],
+        defaultId: 0,
+        cancelId: 1,
+        title: 'Atualização disponível',
+        message: `Versão ${info.version} baixada. Deseja instalar agora?`
+      });
+
+      if (result.response === 0) {
+        setTimeout(() => autoUpdater.quitAndInstall(), 1000);
+      }
+    });
+  } else {
+    console.log('App is not packaged — auto-updates disabled in development');
+  }
 });
