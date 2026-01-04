@@ -11,7 +11,7 @@ function createWindow() {
     autoHideMenuBar: true, // REMOVE File | Window
   });
 
-  win.loadURL("http://localhost:3333");
+  win.loadFile("renderer/index.html");
 
   win.on("close", (e) => {
     e.preventDefault();
