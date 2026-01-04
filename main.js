@@ -1,5 +1,7 @@
-const { app, BrowserWindow, Tray, Menu, dialog } = require("electron");
+const { app, BrowserWindow, Tray, Menu, dialog, ipcMain } = require("electron");
 const { autoUpdater } = require('electron-updater');
+const { hashPin } = require('./server/auth');
+const { loadConfig, saveConfig } = require('./server/config');
 const path = require("path");
 
 let win;
@@ -10,6 +12,11 @@ function createWindow() {
     width: 600,
     height: 700,
     autoHideMenuBar: true, // REMOVE File | Window
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
   });
 
   win.loadFile("renderer/index.html");
@@ -79,4 +86,22 @@ app.whenReady().then(() => {
   } else {
     console.log('App is not packaged — auto-updates disabled in development');
   }
+
+  // IPC: reset PIN (desktop only)
+  ipcMain.handle('reset-pin', async (event, newPin) => {
+    try {
+      if (typeof newPin !== 'string' || newPin.length < 4) {
+        return { error: 'PIN inválido: mínimo 4 caracteres' };
+      }
+
+      const hash = await hashPin(newPin);
+      const cfg = loadConfig();
+      cfg.pin = hash;
+      saveConfig(cfg);
+      return { status: 'PIN redefinido com sucesso' };
+    } catch (err) {
+      console.error('Erro ao redefinir PIN:', err);
+      return { error: 'Erro ao redefinir PIN' };
+    }
+  });
 });

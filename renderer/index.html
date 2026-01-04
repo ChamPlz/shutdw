@@ -191,6 +191,9 @@
               </svg>
               Salvar Novo PIN
             </button>
+            <button class="btn" style="margin-left:8px" onclick="resetPinDesktop()" title="Redefinir PIN pelo cliente desktop">
+              Redefinir PIN (Desktop)
+            </button>
           </div>
           <p id="configStatus" class="status-message"></p>
         </div>
@@ -313,6 +316,41 @@
           configStatus.innerText = "Erro de conexão";
           configStatus.className = 'status-message error';
         });
+    }
+
+    // Desktop-only reset PIN via IPC (preload -> main). Only works in Electron.
+    async function resetPinDesktop() {
+      const newPin = document.getElementById('newPin').value;
+      const configStatus = document.getElementById('configStatus');
+      if (!newPin || newPin.length < 4) {
+        configStatus.innerText = 'Novo PIN precisa ter ao menos 4 caracteres';
+        configStatus.className = 'status-message error';
+        return;
+      }
+
+      if (!window.api || !window.api.resetPin) {
+        configStatus.innerText = 'Funcionalidade disponível somente no cliente desktop';
+        configStatus.className = 'status-message error';
+        return;
+      }
+
+      configStatus.innerText = 'Redefinindo PIN...';
+      configStatus.className = 'status-message';
+      try {
+        const res = await window.api.resetPin(newPin);
+        if (res && res.error) {
+          configStatus.innerText = res.error;
+          configStatus.className = 'status-message error';
+        } else {
+          configStatus.innerText = res.status || 'PIN redefinido com sucesso';
+          configStatus.className = 'status-message success';
+          document.getElementById('currentPin').value = '';
+          document.getElementById('newPin').value = '';
+        }
+      } catch (e) {
+        configStatus.innerText = 'Erro ao redefinir PIN';
+        configStatus.className = 'status-message error';
+      }
     }
 
     // Load QR code and link
