@@ -1,3 +1,4 @@
+
 # ⚡ ShutDW
 
 Um aplicativo moderno para **desligar o computador remotamente**, **agendar desligamentos** e **controlar tudo pelo celular** através de uma interface web simples e segura.
@@ -24,7 +25,10 @@ Um aplicativo moderno para **desligar o computador remotamente**, **agendar desl
 
 ## 📸 Screenshots
 
-> 
+
+<img src="https://imgur.com/UtWJMQv.png" alt="Descrição da Imagem" width="200">
+<img src="https://imgur.com/pL2vBkY.png" alt="Descrição da Imagem" width="233">
+<img src="https://imgur.com/x0Gdf4S.png" alt="Descrição da Imagem" width="200">
 
 ---
 
@@ -44,7 +48,7 @@ Após abrir:
 
 Com o app rodando, acesse no celular:
 
-http://IP_DO_SEU_PC:3000
+http://localhost:3333
 
 
 O próprio app exibe:
@@ -63,7 +67,7 @@ O próprio app exibe:
 
 ```bash
 git clone https://github.com/ChamPlz/shutdw.git
-cd controle-de-energia
+cd shutdw
 npm install 
 ```
 Rodar o APP
