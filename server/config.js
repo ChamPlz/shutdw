@@ -6,7 +6,7 @@ const configDir = path.join(app.getPath("userData"), "config");
 const configPath = path.join(configDir, "config.json");
 
 const defaultConfig = {
-  pin: "1234567",
+  pin: null,
   scheduledAt: null
 };
 

@@ -5,8 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ShutDW - Controle de Energia</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999}
+    .modal-box{background:#fff;padding:20px;border-radius:8px;max-width:420px;width:92%;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+    .modal-header{font-weight:700;margin-bottom:8px}
+    .modal-input{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:4px}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+    .hidden{display:none}
+  </style>
 </head>
 <body>
+  <!-- First-time PIN modal -->
+  <div id="pinModal" class="modal-overlay hidden">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="pinModalTitle">
+      <div id="pinModalTitle" class="modal-header">Bem-vindo — Crie um PIN de acesso</div>
+      <p>Defina um PIN de pelo menos 4 dígitos para proteger o acesso remoto.</p>
+      <input id="firstPin" type="password" placeholder="Novo PIN" class="modal-input" />
+      <input id="firstPinConfirm" type="password" placeholder="Confirme o PIN" class="modal-input" />
+      <div id="pinModalMsg" style="color:#c00;min-height:18px"></div>
+      <div class="modal-actions">
+        <button onclick="createFirstPin()" class="btn btn-primary">Criar PIN</button>
+      </div>
+    </div>
+  </div>
   <div class="container">
     <div class="card">
       <!-- Header -->
@@ -157,7 +178,7 @@
               <line x1="12" y1="16" x2="12" y2="12"/>
               <line x1="12" y1="8" x2="12.01" y2="8"/>
             </svg>
-            <span>PIN padrão: <strong>1234567</strong></span>
+            <span><strong>Não</strong> compartilhe seu PIN com ninguém.</span>
           </div>
           <div class="config-group">
             <input type="password" id="currentPin" placeholder="PIN atual" class="input-field" />
@@ -309,6 +330,29 @@
       .catch(() => {
         document.getElementById("link").innerText = "Erro ao carregar";
       });
+
+    // First-time PIN flow: check whether a PIN is configured and show modal if not
+    function showPinModal() { document.getElementById('pinModal').classList.remove('hidden'); }
+    function hidePinModal() { document.getElementById('pinModal').classList.add('hidden'); }
+
+    function createFirstPin() {
+      const pin = document.getElementById('firstPin').value;
+      const confirm = document.getElementById('firstPinConfirm').value;
+      const msg = document.getElementById('pinModalMsg');
+      msg.style.color = '#c00';
+      if (!pin || pin.length < 4) { msg.innerText = 'PIN precisa ter ao menos 4 caracteres'; return; }
+      if (pin !== confirm) { msg.innerText = 'PIN e confirmação não conferem'; return; }
+
+      fetch('/config/pin', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newPin: pin })
+      }).then(r => r.json()).then(d => {
+        if (d.error) { msg.innerText = d.error; return; }
+        msg.style.color = '#086'; msg.innerText = d.status || 'PIN criado com sucesso';
+        setTimeout(hidePinModal, 900);
+      }).catch(() => { msg.innerText = 'Erro de conexão'; });
+    }
+
+    (function(){ fetch('/config/pin').then(r => r.json()).then(d => { if (!d.configured) showPinModal(); }).catch(()=>{}); })();
   </script>
 </body>
 </html>

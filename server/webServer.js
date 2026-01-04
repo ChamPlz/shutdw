@@ -3,6 +3,8 @@ const path = require("path");
 const { exec } = require("child_process");
 const { loadConfig, saveConfig } = require("./config");
 const os = require("os");
+const dgram = require("dgram");
+const auth = require("./auth");
 
 const app = express();
 app.use(express.json());
@@ -12,12 +14,35 @@ let config = loadConfig();
 let shutdownTimeout = null;
 
 // Middleware PIN
-app.use((req, res, next) => {
+// - Allow all GET requests
+// - If no PIN is configured, allow only POST /config/pin so user can set the first PIN
+// - Otherwise require verification (supports Argon2 hashes or plain-text legacy PINs)
+app.use(async (req, res, next) => {
   if (req.method === "GET") return next();
-  if (req.headers["x-pin"] !== config.pin) {
-    return res.status(401).json({ error: "PIN inválido" });
+
+  const provided = (req.headers["x-pin"] || "").toString();
+  const stored = config.pin;
+
+  if (!stored) {
+    if (req.method === 'POST' && req.path === '/config/pin') return next();
+    return res.status(401).json({ error: "PIN não configurado. Use POST /config/pin para criar um." });
   }
-  next();
+
+  try {
+    if (auth.isHash(stored)) {
+      const ok = await auth.verifyPin(stored, provided);
+      if (!ok) return res.status(401).json({ error: "PIN inválido" });
+      return next();
+    }
+
+    // Legacy plain-text PIN support (no migration performed automatically)
+    if (typeof stored === 'string' && provided === stored) return next();
+
+    return res.status(401).json({ error: "PIN inválido" });
+  } catch (err) {
+    console.error("Erro ao verificar PIN:", err);
+    return res.status(500).json({ error: "Erro ao verificar PIN" });
+  }
 });
 
 function scheduleShutdown(date) {
@@ -45,23 +70,48 @@ app.get("/status", (req, res) => {
   res.json({ remaining });
 });
 
-app.get("/ip", (req, res) => {
-  const nets = os.networkInterfaces();
-  let ip = "localhost";
+async function getOutboundIp(timeout = 1000) {
+  return new Promise((resolve) => {
+    try {
+      const socket = dgram.createSocket("udp4");
+      const timer = setTimeout(() => {
+        socket.close();
+        resolve("localhost");
+      }, timeout);
 
-  for (const name of Object.keys(nets)) {
-    for (const net of nets[name]) {
-      if (net.family === "IPv4" && !net.internal) {
-        ip = net.address;
-        break;
-      }
+      socket.connect(53, "8.8.8.8", () => {
+        clearTimeout(timer);
+        try {
+          const addr = socket.address();
+          resolve(addr.address || "localhost");
+        } catch (e) {
+          resolve("localhost");
+        }
+        socket.close();
+      });
+
+      socket.on("error", () => {
+        clearTimeout(timer);
+        socket.close();
+        resolve("localhost");
+      });
+    } catch (e) {
+      resolve("localhost");
     }
-  }
+  });
+}
 
+app.get("/ip", async (req, res) => {
+  const ip = await getOutboundIp();
   res.json({
     ip,
     url: `http://${ip}:3333`
   });
+});
+
+// Return whether a PIN is configured (used by UI to prompt first-time setup)
+app.get('/config/pin', (req, res) => {
+  res.json({ configured: !!config.pin });
 });
 
 
@@ -97,17 +147,22 @@ app.post("/cancel", (_, res) => {
   res.json({ status: "Agendamento cancelado" });
 });
 
-app.post("/config/pin", (req, res) => {
+app.post("/config/pin", async (req, res) => {
   const { newPin } = req.body;
 
-  if (!newPin || newPin.length < 4) {
+  if (!newPin || typeof newPin !== 'string' || newPin.length < 4) {
     return res.status(400).json({ error: "PIN inválido" });
   }
 
-  config.pin = newPin;
-  saveConfig(config);
-
-  res.json({ status: "PIN atualizado com sucesso" });
+  try {
+    const hash = await auth.hashPin(newPin);
+    config.pin = hash;
+    saveConfig(config);
+    res.json({ status: "PIN atualizado com sucesso" });
+  } catch (err) {
+    console.error("Erro ao hashear novo PIN:", err);
+    res.status(500).json({ error: "Erro ao atualizar PIN" });
+  }
 });
 
 app.listen(3333);

@@ -11,6 +11,7 @@
     "build": "electron-builder"
   },
   "dependencies": {
+    "argon2": "^0.44.0",
     "express": "^4.19.2"
   },
   "devDependencies": {
