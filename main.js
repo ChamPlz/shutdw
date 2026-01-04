@@ -6,6 +6,7 @@ const path = require("path");
 
 let win;
 let tray;
+let allowQuit = false; // when true, allow the window to close (used during auto-update)
 
 function createWindow() {
   win = new BrowserWindow({
@@ -22,8 +23,11 @@ function createWindow() {
   win.loadFile("renderer/index.html");
 
   win.on("close", (e) => {
-    e.preventDefault();
-    win.hide(); // Vai para ícones ocultos
+    if (!allowQuit) {
+      e.preventDefault();
+      win.hide(); // Vai para ícones ocultos
+    }
+    // if allowQuit is true, allow the default close behavior so app can exit for updates
   });
 }
 
@@ -80,6 +84,8 @@ app.whenReady().then(() => {
       });
 
       if (result.response === 0) {
+        // allow the window to actually close when updater quits the app
+        allowQuit = true;
         setTimeout(() => autoUpdater.quitAndInstall(), 1000);
       }
     });
