@@ -6,6 +6,12 @@ const os = require("os");
 const dgram = require("dgram");
 const auth = require("./auth");
 
+const {
+  createOverlay,
+  closeOverlay,
+  sendRemaining
+} = require("../overlay/overlayWindow");
+
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../web")));
@@ -51,9 +57,22 @@ function scheduleShutdown(date) {
   const delay = date - Date.now();
   if (delay <= 0) return;
 
-  shutdownTimeout = setTimeout(() => {
-    exec("shutdown /s /t 0");
-  }, delay);
+  createOverlay();
+
+  shutdownTimeout = setInterval(() => {
+    const remaining = Math.max(
+      0,
+      Math.floor((date - Date.now()) / 1000)
+    );
+
+    sendRemaining(remaining);
+
+    if (remaining <= 0) {
+      clearInterval(shutdownTimeout);
+      closeOverlay();
+      exec("shutdown /s /t 0");
+    }
+  }, 1000);
 
   config.scheduledAt = date;
   saveConfig(config);
@@ -140,11 +159,24 @@ app.post("/schedule", (req, res) => {
 });
 
 app.post("/cancel", (_, res) => {
-  if (shutdownTimeout) clearTimeout(shutdownTimeout);
+  if (shutdownTimeout) clearInterval(shutdownTimeout);
+
+  closeOverlay();
+
   config.scheduledAt = null;
   saveConfig(config);
   exec("shutdown /a");
+
   res.json({ status: "Agendamento cancelado" });
+});
+
+process.on("cancel-shutdown", () => {
+  if (shutdownTimeout) clearInterval(shutdownTimeout);
+  closeOverlay();
+  exec("shutdown /a");
+
+  config.scheduledAt = null;
+  saveConfig(config);
 });
 
 app.post("/config/pin", async (req, res) => {
