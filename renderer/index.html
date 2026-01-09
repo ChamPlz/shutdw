@@ -1,223 +1,266 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ShutDW - Controle de Energia</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999}
-    .modal-box{background:#fff;padding:20px;border-radius:8px;max-width:420px;width:92%;box-shadow:0 6px 24px rgba(0,0,0,.2)}
-    .modal-header{font-weight:700;margin-bottom:8px}
-    .modal-input{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:4px}
-    .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
-    .hidden{display:none}
-  </style>
 </head>
+
 <body>
-  <!-- First-time PIN modal -->
+  <!-- barra invisivel para drag-->
+  <div class="drag-bar">
+    <div class="bar-container">
+      <button class="close-btn" onclick="window.api.close()">X</button>
+    </div>
+  </div>
+  <!-- Modal PIN -->
   <div id="pinModal" class="modal-overlay hidden">
-    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="pinModalTitle">
-      <div id="pinModalTitle" class="modal-header">Bem-vindo — Crie um PIN de acesso</div>
+    <div class="modal-box">
+      <div class="modal-header">Bem-vindo — Crie um PIN de acesso</div>
       <p>Defina um PIN de pelo menos 4 dígitos para proteger o acesso remoto.</p>
       <input id="firstPin" type="password" placeholder="Novo PIN" class="modal-input" />
       <input id="firstPinConfirm" type="password" placeholder="Confirme o PIN" class="modal-input" />
-      <div id="pinModalMsg" style="color:#c00;min-height:18px"></div>
+      <div id="pinModalMsg"></div>
       <div class="modal-actions">
         <button onclick="createFirstPin()" class="btn btn-primary">Criar PIN</button>
       </div>
     </div>
   </div>
-  <div class="container">
-    <div class="card">
-      <!-- Header -->
-      <div class="header">
-        <div class="header-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M13 2L3 14h8l-2 8 10-12h-8l2-8z"/>
+
+  <!-- App Container -->
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 2L3 14h8l-2 8 10-12h-8l2-8z" />
           </svg>
         </div>
-        <h1 class="title">ShutDW</h1>
-        <p class="subtitle">Controle de Energia</p>
+        <div class="logo-text">
+          <h1 class="logo-title">ShutDW</h1>
+          <p class="logo-subtitle">Controle de Energia</p>
+        </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="tabs">
-        <button class="tab active" onclick="showTab('control')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
+      <nav class="nav-menu">
+        <button class="nav-item active" onclick="showTab('control')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          Controle
+          <span>Controle</span>
         </button>
-        <button class="tab" onclick="showTab('config')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+        <button class="nav-item" onclick="showTab('config')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24" />
           </svg>
-          Config
+          <span>Configurações</span>
         </button>
-      </div>
+      </nav>
 
+      <div class="sidebar-footer">
+        <div class="status-indicator">
+          <div class="status-dot"></div>
+          <span>Sistema Online</span>
+        </div>
+      </div>
+    </aside>
+    <!-- Main Content -->
+    <main class="main-content">
       <!-- Control Tab -->
       <div id="control" class="tab-content">
-        <!-- PIN Section -->
-        <div class="section">
-          <div class="section-header">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-            <h2>Autenticação</h2>
-          </div>
-          <div class="input-group">
-            <input type="password" id="pin" placeholder="Digite seu PIN" class="input-field" />
-            <button class="btn btn-danger" onclick="send('/shutdown')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
-                <line x1="12" y1="2" x2="12" y2="12"/>
+        <div class="content-grid">
+          <!-- PIN & Shutdown -->
+          <div class="card">
+            <div class="card-header">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
-              Desligar Agora
-            </button>
-          </div>
-        </div>
-
-        <!-- Timer Section -->
-        <div class="section">
-          <div class="section-header">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-            <h2>Desligamento Programado</h2>
-          </div>
-          <div class="timer-grid">
-            <button class="btn btn-timer" onclick="send('/shutdown/10')">
-              <span class="timer-value">10</span>
-              <span class="timer-unit">minutos</span>
-            </button>
-            <button class="btn btn-timer" onclick="send('/shutdown/30')">
-              <span class="timer-value">30</span>
-              <span class="timer-unit">minutos</span>
-            </button>
-            <button class="btn btn-timer" onclick="send('/shutdown/60')">
-              <span class="timer-value">60</span>
-              <span class="timer-unit">minutos</span>
-            </button>
-          </div>
-          <button class="btn btn-secondary" onclick="send('/cancel')">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="15" y1="9" x2="9" y2="15"/>
-              <line x1="9" y1="9" x2="15" y2="15"/>
-            </svg>
-            Cancelar Agendamento
-          </button>
-        </div>
-
-        <!-- Schedule Section -->
-        <div class="section">
-          <div class="section-header">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <h2>Agendar Horário Específico</h2>
-          </div>
-          <div class="schedule-group">
-            <input type="time" id="timePicker" class="input-field" />
-            <button class="btn btn-primary" onclick="scheduleExact()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-              Agendar
-            </button>
-          </div>
-        </div>
-
-        <!-- Mobile Access Section -->
-        <div class="section">
-          <div class="section-header">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-              <line x1="12" y1="18" x2="12.01" y2="18"/>
-            </svg>
-            <h2>Acesso Mobile</h2>
-          </div>
-          <div class="qr-container">
-            <div class="qr-box">
-              <img id="qr" alt="QR Code" />
+              <h2>Autenticação</h2>
             </div>
-            <a id="link" target="_blank" class="qr-link"></a>
+            <div class="card-body">
+              <input type="password" id="pin" placeholder="Digite seu PIN" class="input-field" />
+              <button class="btn btn-danger" onclick="send('/shutdown')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+                  <line x1="12" y1="2" x2="12" y2="12" />
+                </svg>
+                Desligar Agora
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- Status Display -->
-        <div class="status-container">
-          <p id="timer" class="status-timer"></p>
-          <p id="status" class="status-message"></p>
+          <!-- Timer Buttons -->
+          <div class="card">
+            <div class="card-header">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <h2>Desligamento Rápido</h2>
+            </div>
+            <div class="card-body">
+              <div class="timer-grid">
+                <button class="btn-timer" onclick="send('/shutdown/10')">
+                  <span class="timer-value">10</span>
+                  <span class="timer-unit">min</span>
+                </button>
+                <button class="btn-timer" onclick="send('/shutdown/30')">
+                  <span class="timer-value">30</span>
+                  <span class="timer-unit">min</span>
+                </button>
+                <button class="btn-timer" onclick="send('/shutdown/60')">
+                  <span class="timer-value">60</span>
+                  <span class="timer-unit">min</span>
+                </button>
+              </div>
+              <button class="btn btn-secondary" onclick="send('/cancel')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+                Cancelar Agendamento
+              </button>
+            </div>
+          </div>
+
+          <!-- Schedule -->
+          <div class="card">
+            <div class="card-header">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <h2>Horário Específico</h2>
+            </div>
+            <div class="card-body">
+              <input type="time" id="timePicker" class="input-field" />
+              <button class="btn btn-primary" onclick="scheduleExact()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Agendar
+              </button>
+            </div>
+          </div>
+
+          <!-- QR Code -->
+          <div class="card">
+            <div class="card-header">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                <line x1="12" y1="18" x2="12.01" y2="18" />
+              </svg>
+              <h2>Acesso Mobile</h2>
+            </div>
+            <div class="card-body qr-container">
+              <div class="qr-box">
+                <img id="qr" alt="QR Code" />
+              </div>
+              <div class="qr-info">
+                <p class="qr-label">Escaneie para acessar</p>
+                <a id="link" target="_blank" class="qr-link"></a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Display -->
+          <div class="card card-status">
+            <div class="card-body">
+              <div id="timer" class="status-timer"></div>
+              <div id="status" class="status-message"></div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Config Tab -->
       <div id="config" class="tab-content hidden">
-        <div class="section">
-          <div class="section-header">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-            </svg>
-            <h2>Configuração de PIN</h2>
-          </div>
-          <div class="alert">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="16" x2="12" y2="12"/>
-              <line x1="12" y1="8" x2="12.01" y2="8"/>
-            </svg>
-            <span><strong>Não</strong> compartilhe seu PIN com ninguém.</span>
-          </div>
-          <div class="config-group">
-            <input type="password" id="currentPin" placeholder="PIN atual" class="input-field" />
-            <input type="password" id="newPin" placeholder="Novo PIN" class="input-field" />
-            <button class="btn btn-primary" onclick="savePin()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/>
-                <polyline points="7 3 7 8 15 8"/>
+        <div class="content-grid">
+          <div class="card card-full">
+            <div class="card-header">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
-              Salvar Novo PIN
-            </button>
-            <button class="btn btn-danger" onclick="resetPinDesktop()" title="Redefinir PIN pelo cliente desktop">
-              Redefinir PIN (Desktop)
-            </button>
+              <h2>Configuração de PIN</h2>
+            </div>
+            <div class="card-body">
+              <div class="alert">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <span><strong>Não</strong> compartilhe seu PIN com ninguém.</span>
+              </div>
+              <div class="config-form">
+                <input type="password" id="currentPin" placeholder="PIN atual" class="input-field" />
+                <input type="password" id="newPin" placeholder="Novo PIN" class="input-field" />
+                <div class="button-group">
+                  <button class="btn btn-primary" onclick="savePin()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                      <polyline points="17 21 17 13 7 13 7 21" />
+                      <polyline points="7 3 7 8 15 8" />
+                    </svg>
+                    Salvar Novo PIN
+                  </button>
+                  <button class="btn btn-danger" onclick="resetPinDesktop()">
+                    Redefinir PIN (Desktop)
+                  </button>
+                </div>
+              </div>
+              <p id="configStatus" class="status-message"></p>
+            </div>
           </div>
-          <p id="configStatus" class="status-message"></p>
+          <div class="card card-full">
+            <div class="card-body">
+              <div class="config-form">
+                <div class="card-header">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 1v2m0 18v2m9-11h-2M5 12H3m15.36 6.36l-1.42-1.42M6.34 7.64L4.92 6.22m12.02 0l1.42 1.42M6.34 16.36l-1.42 1.42" />
+                    <circle cx="12" cy="12" r="5" />
+                  </svg>
+                <h2>Iniciar com o sistema</h2>
+                </div>
+                <div class="checkbox-wrapper-8">
+                  <input class="tgl tgl-skewed" id="cb3-8" type="checkbox" onchange="window.api.autoStart(this.checked)"/>
+                  <label class="tgl-btn" data-tg-off="OFF" data-tg-on="ON" for="cb3-8"></label>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   </div>
 
   <script>
     const pinInput = document.getElementById("pin");
     const status = document.getElementById("status");
     const timer = document.getElementById("timer");
-    const statusContainer = document.querySelector(".status-container");
     const url = "http://localhost:3333";
 
-    // Tab switching
     function showTab(tab) {
-      document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
       document.querySelectorAll(".tab-content").forEach(t => t.classList.add("hidden"));
-      
+
       document.querySelector(`[onclick="showTab('${tab}')"]`).classList.add("active");
       document.getElementById(tab).classList.remove("hidden");
     }
 
-    // Send action
     function send(route) {
       fetch(`${url}${route}`, {
         method: "POST",
@@ -228,13 +271,12 @@
           status.innerText = d.status || d.error;
           status.className = d.error ? 'status-message error' : 'status-message success';
         })
-        .catch(err => {
+        .catch(() => {
           status.innerText = "Erro de conexão";
           status.className = 'status-message error';
         });
     }
 
-    // Schedule exact time
     function scheduleExact() {
       const timeValue = document.getElementById("timePicker").value;
       if (!timeValue) {
@@ -256,34 +298,29 @@
           status.innerText = d.status || d.error;
           status.className = d.error ? 'status-message error' : 'status-message success';
         })
-        .catch(err => {
+        .catch(() => {
           status.innerText = "Erro de conexão";
           status.className = 'status-message error';
         });
     }
 
-    // Update timer
     setInterval(() => {
       fetch(`${url}/status`)
         .then(r => r.json())
         .then(d => {
           if (d.remaining == null || d.remaining <= 0) {
             timer.innerText = "";
-            statusContainer.classList.add("hidden");
             return;
           }
-          statusContainer.classList.remove("hidden");
           const m = Math.floor(d.remaining / 60);
           const s = d.remaining % 60;
           timer.innerText = `⏱️ ${m}m ${s}s restantes`;
-          timer.className = 'status-timer active';
         })
         .catch(() => {
           timer.innerText = "";
         });
     }, 1000);
 
-    // Save PIN
     function savePin() {
       const currentPin = document.getElementById("currentPin").value;
       const newPin = document.getElementById("newPin").value;
@@ -312,13 +349,12 @@
             document.getElementById("newPin").value = "";
           }
         })
-        .catch(err => {
+        .catch(() => {
           configStatus.innerText = "Erro de conexão";
           configStatus.className = 'status-message error';
         });
     }
 
-    // Desktop-only reset PIN via IPC (preload -> main). Only works in Electron.
     async function resetPinDesktop() {
       const newPin = document.getElementById('newPin').value;
       const configStatus = document.getElementById('configStatus');
@@ -334,43 +370,36 @@
         return;
       }
 
-      configStatus.innerText = 'Redefinindo PIN...';
-      configStatus.className = 'status-message';
       try {
         const res = await window.api.resetPin(newPin);
-        if (res && res.error) {
-          configStatus.innerText = res.error;
-          configStatus.className = 'status-message error';
-        } else {
-          configStatus.innerText = res.status || 'PIN redefinido com sucesso';
-          configStatus.className = 'status-message success';
+        configStatus.innerText = res.status || 'PIN redefinido com sucesso';
+        configStatus.className = res.error ? 'status-message error' : 'status-message success';
+        if (!res.error) {
           document.getElementById('currentPin').value = '';
           document.getElementById('newPin').value = '';
         }
-      } catch (e) {
+      } catch {
         configStatus.innerText = 'Erro ao redefinir PIN';
         configStatus.className = 'status-message error';
       }
     }
 
-    // Load QR code and link
     fetch(`${url}/ip`)
       .then(r => r.json())
       .then(d => {
-        const url = d.url;
-        document.getElementById("qr").src = 
-          "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + 
-          encodeURIComponent(url);
-        
+        const qrUrl = d.url;
+        document.getElementById("qr").src =
+          "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=" +
+          encodeURIComponent(qrUrl);
+
         const link = document.getElementById("link");
-        link.href = url;
-        link.innerText = url;
+        link.href = qrUrl;
+        link.innerText = qrUrl;
       })
       .catch(() => {
         document.getElementById("link").innerText = "Erro ao carregar";
       });
 
-    // First-time PIN flow: check whether a PIN is configured and show modal if not
     function showPinModal() {
       document.getElementById('pinModal').classList.remove('hidden');
     }
@@ -383,34 +412,42 @@
       const pin = document.getElementById('firstPin').value;
       const confirm = document.getElementById('firstPinConfirm').value;
       const msg = document.getElementById('pinModalMsg');
-      msg.style.color = '#c00';
 
-      if (!pin || pin.length < 4) { msg.innerText = 'PIN precisa ter ao menos 4 caracteres'; return; }
-      if (pin !== confirm) { msg.innerText = 'PIN e confirmação não conferem'; return; }
+      if (!pin || pin.length < 4) {
+        msg.innerText = 'PIN precisa ter ao menos 4 caracteres';
+        return;
+      }
+      if (pin !== confirm) {
+        msg.innerText = 'PIN e confirmação não conferem';
+        return;
+      }
 
       fetch(`${url}/config/pin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newPin: pin })
       })
-      .then(r => r.json())
-      .then(d => {
-        if (d.error) { msg.innerText = d.error; return; }
-        msg.style.color = '#086';
-        msg.innerText = d.status || 'PIN criado com sucesso';
-        setTimeout(() => { hidePinModal(); }, 900);
-      })
-      .catch(() => { msg.innerText = 'Erro de conexão'; });
+        .then(r => r.json())
+        .then(d => {
+          if (d.error) {
+            msg.innerText = d.error;
+            return;
+          }
+          msg.innerText = d.status || 'PIN criado com sucesso';
+          setTimeout(() => { hidePinModal(); }, 900);
+        })
+        .catch(() => {
+          msg.innerText = 'Erro de conexão';
+        });
     }
 
-    // Check PIN configured on load
-    (function(){
-      fetch(`${url}/config/pin`).then(r => r.json()).then(d => {
+    fetch(`${url}/config/pin`)
+      .then(r => r.json())
+      .then(d => {
         if (!d.configured) showPinModal();
-      }).catch(() => {
-        // ignore errors; do not block app
-      });
-    })();
+      })
+      .catch(() => { });
   </script>
 </body>
+
 </html>

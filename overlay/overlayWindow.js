@@ -46,4 +46,8 @@ ipcMain.on("overlay:cancel", () => {
   process.emit("cancel-shutdown");
 });
 
+ipcMain.on("overlay:close", () => {
+  closeOverlay();
+} );
+
 module.exports = { createOverlay, closeOverlay, sendRemaining };

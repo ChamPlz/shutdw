@@ -10,9 +10,17 @@ let allowQuit = false; // when true, allow the window to close (used during auto
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 600,
-    height: 700,
+    width: 800,
+    height: 500,
+    frame: false,
     autoHideMenuBar: true, // REMOVE File | Window
+    fullscreenable: false,
+    resizable: false,
+    fullscreen: false,
+    maxHeight: 500,
+    maxWidth: 800,
+    minHeight: 500,
+    minWidth: 800,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -29,6 +37,18 @@ function createWindow() {
     }
     // if allowQuit is true, allow the default close behavior so app can exit for updates
   });
+}
+
+function closeApp() {
+  allowQuit = false;
+  app.quit();
+}
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  allowQuit = true;
+  app.exit();
 }
 
 app.whenReady().then(() => {
@@ -109,5 +129,25 @@ app.whenReady().then(() => {
       console.error('Erro ao redefinir PIN:', err);
       return { error: 'Erro ao redefinir PIN' };
     }
+  });
+  ipcMain.handle('close-app', () => {
+    closeApp();
+  });
+  ipcMain.handle('set-auto-start', (event, enable) => {
+    if (enable !== true && enable !== false) {
+      return;
+    }
+    if (enable == true){
+    app.setLoginItemSettings({
+      openAtLogin: enable,
+    });
+  } else {
+    app.setLoginItemSettings({
+      openAtLogin: false,
+    });
+  }
+  const cfg = loadConfig();
+  cfg.autoStart = enable;
+  saveConfig(cfg);
   });
 });

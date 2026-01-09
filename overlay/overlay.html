@@ -1,115 +1,144 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  border-radius: 15px; 
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  -webkit-app-region: drag;
-}
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-@keyframes pulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.1); }
-}
+    body {
+      margin: 0;
+      width: 300px;
+      height: 120px;
+      background: transparent;
+      -webkit-app-region: drag;
+    }
 
-.container {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  animation: fadeInUp 0.6s ease-out;
-}
+    /* ================= OVERLAY ================= */
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+    .overlay {
+      position: relative;
+      width: 300px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-.drag-handle {
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  height: 80px;
-  background: linear-gradient(135deg, rgba(120, 40, 200, 0.95) 0%, rgba(147, 51, 234, 0.92) 50%, rgba(168, 85, 247, 0.90) 100%);
-  border-radius: 15px;
-  pointer-events: none;
-  animation: fadeIn 0.8s ease-out 0.3s both;
-}
+    /* ================= PILL ================= */
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+    .pill {
+      position: relative;
+      width: 210px;
+      height: 64px;
+      background: linear-gradient(135deg, rgba(120, 40, 200, 0.95) 0%, rgba(147, 51, 234, 0.92) 50%, rgba(168, 85, 247, 0.90) 100%);
+      border-radius: 999px;
+      box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.25);
+      padding: 6px;
+      animation: fadeIn 0.8s ease-out 0.3s both;
+    }
 
-#time {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -1px;
-  pointer-events: none;
-  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
-  font-variant-numeric: tabular-nums;
-  margin-bottom: 2px;
-  margin-top: 8px;
-  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.85) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+    .pill-inner {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(78, 22, 134, 0.95) 0%, rgba(147, 51, 234, 0.92) 50%, rgba(168, 85, 247, 0.90) 100%);
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      opacity: 0.75;
+    }
 
-button {
-  margin-top: 8px;
-  background: rgba(255, 77, 109, 0.9);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 8px 24px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  -webkit-app-region: no-drag;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 4px 16px rgba(255, 77, 109, 0.3);
-}
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-button:hover {
-  background: rgba(255, 77, 109, 1);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(255, 77, 109, 0.5);
-}
+    /* ================= TIME ================= */
 
-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(255, 77, 109, 0.4);
-}
-</style>
+    #time {
+      background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.85) 100%);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+      font-variant-numeric: tabular-nums;
+      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text;
+    }
 
+    /* ================= CANCELAR ================= */
+
+    .cancel {
+      background: #9f2f5b;
+      border: none;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+      box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25);
+      transition: transform 0.15s ease, background 0.2s;
+    }
+
+    .cancel:hover {
+      background: #b3366a;
+      transform: scale(1.05);
+    }
+
+    .cancel:active {
+      transform: scale(0.97);
+    }
+
+    /* ================= FECHAR ================= */
+
+    .close {
+      position: absolute;
+      top: 18px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      background: #9f2f5b;
+      border: 1px solid #771a3e;
+      border-radius: 50%;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2; /* 🔥 GARANTE QUE FIQUE NA FRENTE */
+      transition: transform 0.15s ease;
+      opacity: 0.75;
+    }
+
+    .close:hover {
+      transform: scale(1.1);
+    }
+  </style>
 </head>
+
 <body>
-  <div class="drag-handle"></div>
-  
-  <div class="container">
-    <div id="time">--:--</div>
-    <button onclick="overlay.cancel()">Cancelar</button>
+  <div class="overlay">
+    <button class="close" onclick="overlay.close()">✕</button>
+
+    <div class="pill">
+      <div class="pill-inner">
+        <div id="time">--:--</div>
+        <button class="cancel" onclick="overlay.cancel()">cancelar</button>
+      </div>
+    </div>
   </div>
 
   <script src="overlay.js"></script>
 </body>
+
 </html>
