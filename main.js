@@ -39,9 +39,9 @@ function createWindow() {
   });
 }
 
-function closeApp() {
+function closeApp(window) {
   allowQuit = false;
-  app.quit();
+  win.close();
 }
 
 const gotTheLock = app.requestSingleInstanceLock();
@@ -130,8 +130,8 @@ app.whenReady().then(() => {
       return { error: 'Erro ao redefinir PIN' };
     }
   });
-  ipcMain.handle('close-app', () => {
-    closeApp();
+  ipcMain.handle('close-app', (window) => {
+    closeApp(window);
   });
   ipcMain.handle('set-auto-start', (event, enable) => {
     if (enable !== true && enable !== false) {
