@@ -135,7 +135,7 @@ app.get('/config/pin', (req, res) => {
 
 
 app.post("/shutdown", (_, res) => {
-  exec("shutdown /s /t 0");
+  exec("shutdown /s /t 15");
   res.json({ status: "Desligando agora" });
 });
 
