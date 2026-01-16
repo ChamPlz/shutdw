@@ -42,7 +42,7 @@ function createWindow() {
 
 function closeApp() {
   allowQuit = false;
-  app.quit();
+  win.close();
 }
 
 const gotTheLock = app.requestSingleInstanceLock();

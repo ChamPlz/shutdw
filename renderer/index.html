@@ -175,7 +175,7 @@
           </div>
 
           <!-- Status Display -->
-          <div class="card card-status">
+          <div class="card card-status hidden" id="statuscard">
             <div class="card-body">
               <div id="timer" class="status-timer"></div>
               <div id="status" class="status-message"></div>
@@ -250,6 +250,7 @@
   <script>
     const pinInput = document.getElementById("pin");
     const status = document.getElementById("status");
+    const statuscard = document.getElementById("statuscard");
     const timer = document.getElementById("timer");
     const url = "http://localhost:3333";
 
@@ -267,11 +268,13 @@
         headers: { "x-pin": pinInput.value }
       })
         .then(r => r.json())
-        .then(d => {
+        .then(async d => {
+          statuscard.classList.remove('hidden');  
           status.innerText = d.status || d.error;
           status.className = d.error ? 'status-message error' : 'status-message success';
         })
         .catch(() => {
+          statuscard.classList.remove('hidden');
           status.innerText = "Erro de conexão";
           status.className = 'status-message error';
         });
@@ -280,6 +283,7 @@
     function scheduleExact() {
       const timeValue = document.getElementById("timePicker").value;
       if (!timeValue) {
+        statuscard.classList.remove('hidden');
         status.innerText = "Por favor, selecione um horário";
         status.className = 'status-message error';
         return;
@@ -295,10 +299,12 @@
       })
         .then(r => r.json())
         .then(d => {
+          statuscard.classList.remove('hidden');
           status.innerText = d.status || d.error;
           status.className = d.error ? 'status-message error' : 'status-message success';
         })
         .catch(() => {
+          statuscard.classList.remove('hidden');
           status.innerText = "Erro de conexão";
           status.className = 'status-message error';
         });
@@ -310,13 +316,17 @@
         .then(d => {
           if (d.remaining == null || d.remaining <= 0) {
             timer.innerText = "";
+            timer.classList.add('hidden');
             return;
-          }
+          } 
+          statuscard.classList.remove('hidden');
+          timer.classList.remove('hidden');
           const m = Math.floor(d.remaining / 60);
           const s = d.remaining % 60;
           timer.innerText = `⏱️ ${m}m ${s}s restantes`;
         })
         .catch(() => {
+          statuscard.classList.add('hidden');
           timer.innerText = "";
         });
     }, 1000);
