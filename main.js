@@ -13,6 +13,7 @@ function createWindow() {
     width: 800,
     height: 500,
     frame: false,
+    icon: path.join(__dirname, "build/icon.ico"),
     autoHideMenuBar: true, // REMOVE File | Window
     fullscreenable: false,
     resizable: false,
@@ -60,7 +61,7 @@ app.whenReady().then(() => {
   tray.setToolTip("ShutDW - Desligamento automatico");
 
   tray.setContextMenu(Menu.buildFromTemplate([
-    {label:"desligar agora", click: () => ipcMain.emit('shutdown-now')},
+    {label:"Desligar agora", click: () => ipcMain.emit('shutdown-now')},
     { label: "Abrir", click: () => win.show() },
     { label: "Sair", click: () => app.exit() },
   ]));

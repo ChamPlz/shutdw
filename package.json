@@ -31,7 +31,8 @@
     "productName": "ShutDW - Desligamento automatico",
     "npmRebuild": false,
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
     },
     "files": [
       "**/*",
@@ -42,34 +43,21 @@
       "!screenshots/**",
       "!dist/**"
     ],
-    "compression": "maximum",
-    "asar": true,
     "win": {
+      "icon": "build/icon.ico",
       "target": {
         "target": "nsis",
         "arch": [
           "x64",
           "ia32"
         ]
-      },
-      "icon": "icon.ico",
-      "requestedExecutionLevel": "requireAdministrator",
-      "signAndEditExecutable": false,
-      "verifyUpdateCodeSignature": false
+      }
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "allowElevation": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "ShutDW",
-      "installerIcon": "icon.ico",
-      "uninstallerIcon": "icon.ico",
-      "deleteAppDataOnUninstall": false,
-      "runAfterFinish": true,
-      "perMachine": false,
-      "displayLanguageSelector": false
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     },
     "publish": [
       {
