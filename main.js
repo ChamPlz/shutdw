@@ -25,7 +25,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
-    }
+    },
+    transparent: true,
   });
 
   win.loadFile("renderer/index.html");
@@ -59,8 +60,9 @@ app.whenReady().then(() => {
   tray.setToolTip("ShutDW - Desligamento automatico");
 
   tray.setContextMenu(Menu.buildFromTemplate([
+    {label:"desligar agora", click: () => ipcMain.emit('shutdown-now')},
     { label: "Abrir", click: () => win.show() },
-    { label: "Sair", click: () => app.exit() }
+    { label: "Sair", click: () => app.exit() },
   ]));
 
   tray.on("double-click", () => win.show());

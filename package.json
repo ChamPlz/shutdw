@@ -1,14 +1,21 @@
 {
   "name": "ShutDW",
-  "version": "1.0.32",
+  "version": "1.0.33",
   "description": "App Electron para desligar/reiniciar o Windows com acesso web",
   "main": "main.js",
   "author": "ChamPlz",
   "license": "Licença propria",
+  "homepage": "https://github.com/ChamPlz/shutdw",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ChamPlz/shutdw.git"
+  },
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder build --win --publish never",
+    "build:all": "electron-builder build --win --x64 --ia32",
+    "publish": "electron-builder build --win --publish always"
   },
   "dependencies": {
     "argon2": "^0.44.0",
@@ -22,26 +29,55 @@
   "build": {
     "appId": "com.carlos.shutdw",
     "productName": "ShutDW - Desligamento automatico",
+    "npmRebuild": false,
     "directories": {
       "output": "dist"
     },
     "files": [
       "**/*",
-      "!data"
+      "!data",
+      "!**/*.md",
+      "!.gitignore",
+      "!.git",
+      "!screenshots/**",
+      "!dist/**"
     ],
+    "compression": "maximum",
+    "asar": true,
     "win": {
-      "target": "nsis",
-      "icon": "icon.ico"
+      "target": {
+        "target": "nsis",
+        "arch": [
+          "x64",
+          "ia32"
+        ]
+      },
+      "icon": "icon.ico",
+      "requestedExecutionLevel": "requireAdministrator",
+      "signAndEditExecutable": false,
+      "verifyUpdateCodeSignature": false
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ShutDW",
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "perMachine": false,
+      "displayLanguageSelector": false
     },
     "publish": [
       {
         "provider": "github",
         "owner": "ChamPlz",
-        "repo": "shutdw"
+        "repo": "shutdw",
+        "private": false,
+        "releaseType": "release"
       }
     ]
   }
