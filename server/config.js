@@ -8,7 +8,8 @@ const configPath = path.join(configDir, "config.json");
 const defaultConfig = {
   pin: null,
   scheduledAt: null,
-  autoStart: false
+  autoStart: false,
+  useIPv6: false
 };
 
 function loadConfig() {

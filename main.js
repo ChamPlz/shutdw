@@ -61,7 +61,6 @@ app.whenReady().then(() => {
   tray.setToolTip("ShutDW - Desligamento automatico");
 
   tray.setContextMenu(Menu.buildFromTemplate([
-    {label:"Desligar agora", click: () => ipcMain.emit('shutdown-now')},
     { label: "Abrir", click: () => win.show() },
     { label: "Sair", click: () => app.exit() },
   ]));
@@ -153,4 +152,8 @@ app.whenReady().then(() => {
   cfg.autoStart = enable;
   saveConfig(cfg);
   });
+  ipcMain.handle('check-auto-start', () => {
+    const settings = app.getLoginItemSettings();
+    return settings.openAtLogin;
+  })
 });

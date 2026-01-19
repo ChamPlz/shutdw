@@ -9,8 +9,8 @@ const dgram = require("dgram");
 const auth = require("./auth");
 
 const appLimit = rateLimit({
-  windowMs: 1 * 60 * 1000, // 15 minutes
-  limit: 20,
+  windowMs: 1 * 60 * 1000,
+  limit: 50,
   message: { error: "Muitas requisições, por favor tente novamente mais tarde." },
   statusCode: 429,
 })
@@ -30,6 +30,24 @@ app.use(appLimit);
 let config = loadConfig();
 let shutdownTimeout = null;
 
+// Helper function to check if IP is IPv6
+function isIPv6(ip) {
+  return ip.includes(':') && !ip.includes('.');
+}
+
+// Middleware to block IPv6 access when disabled
+app.use((req, res, next) => {
+  // Allow localhost IPv6 (::1) always for local testing
+  if (req.ip === '::1') return next();
+  
+  // If IPv6 is disabled and request comes from IPv6, deny access
+  if (!config.useIPv6 && isIPv6(req.ip)) {
+    return res.status(403).json({ error: "Acesso via IPv6 desabilitado" });
+  }
+  
+  next();
+});
+
 // Middleware PIN
 // - Allow all GET requests
 // - If no PIN is configured, allow only POST /config/pin so user can set the first PIN
@@ -42,7 +60,7 @@ app.use(async (req, res, next) => {
 
   if (!stored) {
     if (req.method === 'POST' && req.path === '/config/pin') return next();
-    return res.status(401).json({ error: "PIN não configurado. Use POST /config/pin para criar um." });
+    return res.status(401).json({ error: "PIN não configurado." });
   }
 
   try {
@@ -135,16 +153,77 @@ async function getOutboundIp(timeout = 1000) {
 }
 
 app.get("/ip", async (req, res) => {
+  // IPv4 é sempre o padrão
   const ip = await getOutboundIp();
   res.json({
     ip,
-    url: `http://${ip}:3333`
+    url: `http://${ip}:3333`,
+    ipVersion: "IPv4"
   });
 });
+
+// Get IPv6 address if enabled, otherwise deny access
+app.get("/ip6", async (req, res) => {
+  // Verificar se IPv6 está habilitado
+  if (!config.useIPv6) {
+    return res.status(403).json({ error: "Acesso IPv6 desabilitado" });
+  }
+  
+  const interfaces = os.networkInterfaces();
+  let ipv6Address = null;
+  for (const iface of Object.values(interfaces)) {  
+    for (const addr of iface) {
+      if (addr.family === "IPv6" && !addr.internal) {
+        ipv6Address = addr.address;
+        break;
+      }
+    }
+    if (ipv6Address) break;
+  }
+  
+  if (!ipv6Address) {
+    return res.status(404).json({ error: "IPv6 não disponível" });
+  }
+  
+  res.json({
+    ipv6: ipv6Address,
+    url: `http://[${ipv6Address}]:3333`,
+    enabled: true
+  });
+})
 
 // Return whether a PIN is configured (used by UI to prompt first-time setup)
 app.get('/config/pin', (req, res) => {
   res.json({ configured: !!config.pin });
+});
+
+// Check if IPv6 is available
+app.get('/config/ipv6-available', (req, res) => {
+  const interfaces = os.networkInterfaces();
+  let hasIPv6 = false;
+  for (const iface of Object.values(interfaces)) {
+    for (const addr of iface) {
+      if (addr.family === "IPv6" && !addr.internal) {
+        hasIPv6 = true;
+        break;
+      }
+    }
+    if (hasIPv6) break;
+  }
+  res.json({ available: hasIPv6, enabled: config.useIPv6 });
+});
+
+// Update IPv6 preference
+app.post('/config/ipv6', async (req, res) => {
+  const { useIPv6 } = req.body;
+  
+  if (typeof useIPv6 !== 'boolean') {
+    return res.status(400).json({ error: "Valor inválido" });
+  }
+  
+  config.useIPv6 = useIPv6;
+  saveConfig(config);
+  res.json({ status: "Preferência de IPv6 atualizada", useIPv6 });
 });
 
 

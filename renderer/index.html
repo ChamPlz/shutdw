@@ -164,12 +164,44 @@
               <h2>Acesso Mobile</h2>
             </div>
             <div class="card-body qr-container">
-              <div class="qr-box">
-                <img id="qr" alt="QR Code" />
+              <div class="qr-toggle-wrapper">
+                <div class="qr-toggle">
+                  <button id="qrLocalBtn" class="qr-toggle-btn active" onclick="showQRCode('local')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    Local
+                  </button>
+                  <button id="qrRemotoBtn" class="qr-toggle-btn" onclick="showQRCode('remoto')" style="display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                      class="bi bi-globe" viewBox="0 0 16 16">
+                      <path
+                        d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855A8 8 0 0 0 5.145 4H7.5zM4.09 4a9.3 9.3 0 0 1 .64-1.539 7 7 0 0 1 .597-.933A7.03 7.03 0 0 0 2.255 4zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a7 7 0 0 0-.656 2.5zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5zM8.5 5v2.5h2.99a12.5 12.5 0 0 0-.337-2.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5zM5.145 12q.208.58.468 1.068c.552 1.035 1.218 1.65 1.887 1.855V12zm.182 2.472a7 7 0 0 1-.597-.933A9.3 9.3 0 0 1 4.09 12H2.255a7 7 0 0 0 3.072 2.472M3.82 11a13.7 13.7 0 0 1-.312-2.5h-2.49c.062.89.291 1.733.656 2.5zm6.853 3.472A7 7 0 0 0 13.745 12H11.91a9.3 9.3 0 0 1-.64 1.539 7 7 0 0 1-.597.933M8.5 12v2.923c.67-.204 1.335-.82 1.887-1.855q.26-.487.468-1.068zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.7 13.7 0 0 1-.312 2.5m2.802-3.5a7 7 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7 7 0 0 0-3.072-2.472c.218.284.418.598.597.933M10.855 4a8 8 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4z" />
+                    </svg>
+                    Remoto
+                  </button>
+                </div>
               </div>
-              <div class="qr-info">
-                <p class="qr-label">Escaneie para acessar</p>
-                <a id="link" target="_blank" class="qr-link"></a>
+
+              <div id="qrLocalContent" class="qr-content">
+                <div class="qr-box">
+                  <img id="qr" alt="QR Code IPv4" />
+                </div>
+                <div class="qr-info">
+                  <p class="qr-label">Escaneie para acessar(local):</p>
+                  <a id="link" target="_blank" class="qr-link"></a>
+                </div>
+              </div>
+
+              <div id="qrRemotoContent" class="qr-content" style="display: none;">
+                <div class="qr-box">
+                  <img id="qr-ipv6" alt="QR Code IPv6" />
+                </div>
+                <div class="qr-info">
+                  <p class="qr-label">Acesso via internet (IPv6):</p>
+                  <a id="ipv6Link" target="_blank" class="qr-link" style="word-break: break-all;"></a>
+                </div>
               </div>
             </div>
           </div>
@@ -230,15 +262,36 @@
               <div class="config-form">
                 <div class="card-header">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 1v2m0 18v2m9-11h-2M5 12H3m15.36 6.36l-1.42-1.42M6.34 7.64L4.92 6.22m12.02 0l1.42 1.42M6.34 16.36l-1.42 1.42" />
+                    <path
+                      d="M12 1v2m0 18v2m9-11h-2M5 12H3m15.36 6.36l-1.42-1.42M6.34 7.64L4.92 6.22m12.02 0l1.42 1.42M6.34 16.36l-1.42 1.42" />
                     <circle cx="12" cy="12" r="5" />
                   </svg>
-                <h2>Iniciar com o sistema</h2>
+                  <h2>Iniciar com o sistema</h2>
                 </div>
                 <div class="checkbox-wrapper-8">
-                  <input class="tgl tgl-skewed" id="cb3-8" type="checkbox" onchange="window.api.autoStart(this.checked)"/>
+                  <input class="tgl tgl-skewed" id="cb3-8" type="checkbox"
+                    onchange="window.api.autoStart(this.checked)" />
                   <label class="tgl-btn" data-tg-off="OFF" data-tg-on="ON" for="cb3-8"></label>
                 </div>
+              </div>
+            </div>
+          </div>
+          <div class="card card-full">
+            <div class="card-body">
+              <div class="config-form">
+                <div class="card-header">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                  </svg>
+                  <h2>Acesso Remoto - IPv6</h2>
+                </div>
+                <p id="ipv6Message" style="margin: 10px 0;">Verificando disponibilidade de IPv6...</p>
+                <div class="checkbox-wrapper-8" id="ipv6ToggleContainer" style="display: none;">
+                  <input class="tgl tgl-skewed" id="ipv6Toggle" type="checkbox" onchange="toggleIPv6(this.checked)" />
+                  <label class="tgl-btn" data-tg-off="IPv4" data-tg-on="IPv6" for="ipv6Toggle"></label>
+                </div>
+                <p id="ipv6StatusText" style="margin-top: 10px; font-size: 12px; color: #666;"></p>
               </div>
             </div>
           </div>
@@ -253,6 +306,11 @@
     const statuscard = document.getElementById("statuscard");
     const timer = document.getElementById("timer");
     const url = "http://localhost:3333";
+
+    // Initialize auto-start toggle based on current setting
+    window.api.checkAutoStart().then(isEnabled => {
+      document.getElementById('cb3-8').checked = isEnabled;
+    });
 
     function showTab(tab) {
       document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
@@ -269,7 +327,7 @@
       })
         .then(r => r.json())
         .then(async d => {
-          statuscard.classList.remove('hidden');  
+          statuscard.classList.remove('hidden');
           status.innerText = d.status || d.error;
           status.className = d.error ? 'status-message error' : 'status-message success';
         })
@@ -318,7 +376,7 @@
             timer.innerText = "";
             timer.classList.add('hidden');
             return;
-          } 
+          }
           statuscard.classList.remove('hidden');
           timer.classList.remove('hidden');
           const m = Math.floor(d.remaining / 60);
@@ -394,22 +452,6 @@
       }
     }
 
-    fetch(`${url}/ip`)
-      .then(r => r.json())
-      .then(d => {
-        const qrUrl = d.url;
-        document.getElementById("qr").src =
-          "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=" +
-          encodeURIComponent(qrUrl);
-
-        const link = document.getElementById("link");
-        link.href = qrUrl;
-        link.innerText = qrUrl;
-      })
-      .catch(() => {
-        document.getElementById("link").innerText = "Erro ao carregar";
-      });
-
     function showPinModal() {
       document.getElementById('pinModal').classList.remove('hidden');
     }
@@ -454,9 +496,156 @@
     fetch(`${url}/config/pin`)
       .then(r => r.json())
       .then(d => {
-        if (!d.configured) showPinModal();
+        if (!d.configured) {
+          showPinModal();
+          // Desabilitar botão fechar do modal quando PIN ainda não está configurado
+          document.querySelector('.close-btn').disabled = true;
+          document.querySelector('.close-btn').style.opacity = '0.5';
+          document.querySelector('.close-btn').style.cursor = 'not-allowed';
+        } else {
+          // Se PIN já está configurado, esconder o modal permanentemente
+          document.getElementById('pinModal').style.display = 'none';
+        }
       })
-      .catch(() => { });
+      .catch(() => { })
+      .finally(() => {
+        // Reabilitar botão fechar do modal
+        document.querySelector('.close-btn').disabled = false;
+        document.querySelector('.close-btn').style.opacity = '1';
+        document.querySelector('.close-btn').style.cursor = 'pointer';
+      });
+
+    // Initialize IPv6 settings
+    function initIPv6Settings() {
+      fetch(`${url}/config/ipv6-available`)
+        .then(r => r.json())
+        .then(d => {
+          const message = document.getElementById("ipv6Message");
+          const toggleContainer = document.getElementById("ipv6ToggleContainer");
+          const toggle = document.getElementById("ipv6Toggle");
+          const statusText = document.getElementById("ipv6StatusText");
+
+          if (d.available) {
+            message.innerText = "IPv6 está disponível na sua rede";
+            message.style.color = "#27ae60";
+            toggleContainer.style.display = "flex";
+            toggle.checked = d.enabled;
+            statusText.innerText = d.enabled
+              ? "✓ IPv6 habilitado - acesso disponível"
+              : "IPv6 desabilitado - sem acesso remoto via IPv6";
+
+            // Se IPv6 está habilitado, carregar o link
+            if (d.enabled) {
+              loadIPv6Link();
+            }
+          } else {
+            message.innerText = "IPv6 não está disponível na sua rede";
+            message.style.color = "#e74c3c";
+            toggleContainer.style.display = "none";
+            statusText.innerText = "Seu dispositivo não tem suporte a IPv6";
+          }
+        })
+        .catch(() => {
+          document.getElementById("ipv6Message").innerText = "Erro ao verificar IPv6";
+          document.getElementById("ipv6Message").style.color = "#e74c3c";
+        });
+    }
+
+    function toggleIPv6(enabled) {
+      fetch(`${url}/config/ipv6`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ useIPv6: enabled })
+      })
+        .then(r => r.json())
+        .then(d => {
+          const statusText = document.getElementById("ipv6StatusText");
+          if (d.error) {
+            statusText.innerText = "Erro ao atualizar preferência de IPv6";
+            statusText.style.color = "#e74c3c";
+          } else {
+            statusText.innerText = d.useIPv6
+              ? "✓ IPv6 habilitado - acesso disponível"
+              : "IPv6 desabilitado - sem acesso remoto via IPv6";
+            statusText.style.color = "#27ae60";
+            // Recarregar link IPv6
+            loadIPv6Link();
+          }
+        })
+        .catch(() => {
+          document.getElementById("ipv6StatusText").innerText = "Erro de conexão";
+          document.getElementById("ipv6StatusText").style.color = "#e74c3c";
+        });
+    }
+
+    function loadQRCode() {
+      fetch(`${url}/ip`)
+        .then(r => r.json())
+        .then(d => {
+          const qrUrl = d.url;
+          document.getElementById("qr").src =
+            "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=" +
+            encodeURIComponent(qrUrl);
+
+          const link = document.getElementById("link");
+          link.href = qrUrl;
+          link.innerText = qrUrl;
+        })
+        .catch(() => {
+          document.getElementById("link").innerText = "Erro ao carregar";
+        });
+    }
+
+    function loadIPv6Link() {
+      fetch(`${url}/ip6`)
+        .then(r => r.json())
+        .then(d => {
+          const remotoBtn = document.getElementById("qrRemotoBtn");
+          const ipv6Link = document.getElementById("ipv6Link");
+
+          if (!d.url) {
+            remotoBtn.style.display = "none";
+          } else {
+            remotoBtn.style.display = "inline-block";
+
+            // Gerar QR code para IPv6
+            document.getElementById("qr-ipv6").src =
+              "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=" +
+              encodeURIComponent(d.url);
+
+            ipv6Link.href = d.url;
+            ipv6Link.innerText = d.url;
+          }
+        })
+        .catch(() => {
+          document.getElementById("qrRemotoBtn").style.display = "none";
+        });
+    }
+
+    function showQRCode(mode) {
+      const localBtn = document.getElementById("qrLocalBtn");
+      const remotoBtn = document.getElementById("qrRemotoBtn");
+      const localContent = document.getElementById("qrLocalContent");
+      const remotoContent = document.getElementById("qrRemotoContent");
+
+      if (mode === 'local') {
+        localBtn.classList.add("active");
+        remotoBtn.classList.remove("active");
+        localContent.style.display = "flex";
+        remotoContent.style.display = "none";
+      } else if (mode === 'remoto') {
+        localBtn.classList.remove("active");
+        remotoBtn.classList.add("active");
+        localContent.style.display = "none";
+        remotoContent.style.display = "flex";
+      }
+    }
+
+    // Load QR code initially
+    loadQRCode();
+
+    // Initialize IPv6 settings when page loads
+    initIPv6Settings();
   </script>
 </body>
 

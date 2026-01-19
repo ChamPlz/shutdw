@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld("api", {
   close: () => ipcRenderer.invoke("close-app"),
   resetPin: (newPin) => ipcRenderer.invoke('reset-pin', newPin),
   autoStart: (enable) => ipcRenderer.invoke("set-auto-start", enable),
+  checkAutoStart: () => ipcRenderer.invoke("check-auto-start")
 });

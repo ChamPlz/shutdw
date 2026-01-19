@@ -356,6 +356,7 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
 }
 
 /* Input Fields */
@@ -495,9 +496,29 @@ body::before {
 
 /* QR Container */
 .qr-container {
-  flex-direction: row;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 16px;
+  width: 100%;
+}
+
+.qr-toggle-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.qr-content {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  min-height: 120px;
 }
 
 .qr-box {
@@ -506,6 +527,9 @@ body::before {
   padding: 10px;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
+  flex-shrink: 0;
+  width: fit-content;
+  min-width: 120px;
 }
 
 .qr-box img {
@@ -517,15 +541,16 @@ body::before {
 }
 
 .qr-info {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .qr-label {
   /* Tamanho da fonte reduzido */
-  font-size: 11px;
+  font-size: 10px;
   color: var(--gray-400);
   font-weight: 600;
   text-transform: uppercase;
@@ -536,15 +561,17 @@ body::before {
   color: var(--purple-400);
   text-decoration: none;
   /* Tamanho da fonte reduzido */
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
-  word-break: break-all;
+  word-break: break-word;
+  overflow-wrap: break-word;
   /* Padding reduzido */
   padding: 8px 10px;
   background: rgba(124, 58, 237, 0.1);
   border-radius: 8px;
   border: 1px solid rgba(167, 139, 250, 0.2);
   transition: all 0.3s ease;
+  display: block;
 }
 
 .qr-link:hover {
@@ -842,6 +869,42 @@ body::before {
 
 .hidden {
   display: none;
+}
+
+/* QR Code Toggle */
+.qr-toggle {
+  display: flex;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.4);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+.qr-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  color: var(--gray-400);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.qr-toggle-btn:hover {
+  color: var(--purple-400);
+  background: rgba(124, 58, 237, 0.1);
+}
+
+.qr-toggle-btn.active {
+  background: var(--purple-600);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
 }
 
 /* Remover responsive pois Electron tem tamanho fixo */
