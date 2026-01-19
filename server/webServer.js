@@ -1,10 +1,20 @@
 const express = require("express");
+const { rateLimit } = require('express-rate-limit')
+
 const path = require("path");
 const { exec } = require("child_process");
 const { loadConfig, saveConfig } = require("./config");
 const os = require("os");
 const dgram = require("dgram");
 const auth = require("./auth");
+
+const appLimit = rateLimit({
+  windowMs: 1 * 60 * 1000, // 15 minutes
+  limit: 20,
+  message: { error: "Muitas requisições, por favor tente novamente mais tarde." },
+  statusCode: 429,
+})
+
 
 const {
   createOverlay,
@@ -15,6 +25,7 @@ const {
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../web")));
+app.use(appLimit);
 
 let config = loadConfig();
 let shutdownTimeout = null;

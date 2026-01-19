@@ -20,7 +20,8 @@
   "dependencies": {
     "argon2": "^0.44.0",
     "electron-updater": "^6.6.2",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.2.1"
   },
   "devDependencies": {
     "electron": "^39.2.7",

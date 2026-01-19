@@ -99,7 +99,7 @@ app.whenReady().then(() => {
     autoUpdater.on('update-downloaded', async (info) => {
       const result = await dialog.showMessageBox(win, {
         type: 'info',
-        buttons: ['Instalar e reiniciar', 'Depois'],
+        buttons: ['Instalar e reiniciar o App', 'Depois'],
         defaultId: 0,
         cancelId: 1,
         title: 'Atualização disponível',
