@@ -152,6 +152,38 @@ async function getOutboundIp(timeout = 1000) {
   });
 }
 
+async function getOutboundIpv6(timeout = 1000) {
+  return new Promise((resolve) => {
+    try {
+      const socket = dgram.createSocket("udp6");
+      const timer = setTimeout(() => {
+        socket.close();
+        resolve(null);
+      }, timeout);
+
+      // Google DNS IPv6
+      socket.connect(53, "2001:4860:4860::8888", () => {
+        clearTimeout(timer);
+        try {
+          const addr = socket.address();
+          resolve(addr.address || null);
+        } catch (e) {
+          resolve(null);
+        }
+        socket.close();
+      });
+
+      socket.on("error", () => {
+        clearTimeout(timer);
+        socket.close();
+        resolve(null);
+      });
+    } catch (e) {
+      resolve(null);
+    }
+  });
+}
+
 app.get("/ip", async (req, res) => {
   // IPv4 é sempre o padrão
   const ip = await getOutboundIp();
@@ -169,17 +201,8 @@ app.get("/ip6", async (req, res) => {
     return res.status(403).json({ error: "Acesso IPv6 desabilitado" });
   }
   
-  const interfaces = os.networkInterfaces();
-  let ipv6Address = null;
-  for (const iface of Object.values(interfaces)) {  
-    for (const addr of iface) {
-      if (addr.family === "IPv6" && !addr.internal) {
-        ipv6Address = addr.address;
-        break;
-      }
-    }
-    if (ipv6Address) break;
-  }
+  // Tentar obter o IPv6 com acesso à internet
+  const ipv6Address = await getOutboundIpv6();
   
   if (!ipv6Address) {
     return res.status(404).json({ error: "IPv6 não disponível" });

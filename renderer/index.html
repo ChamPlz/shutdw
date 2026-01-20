@@ -190,7 +190,7 @@
                 </div>
                 <div class="qr-info">
                   <p class="qr-label">Escaneie para acessar(local):</p>
-                  <a id="link" target="_blank" class="qr-link"></a>
+                  <a id="link" class="qr-link"></a>
                 </div>
               </div>
 
@@ -200,7 +200,7 @@
                 </div>
                 <div class="qr-info">
                   <p class="qr-label">Acesso via internet (IPv6):</p>
-                  <a id="ipv6Link" target="_blank" class="qr-link" style="word-break: break-all;"></a>
+                  <a id="ipv6Link" class="qr-link" style="word-break: break-all;"></a>
                 </div>
               </div>
             </div>
@@ -588,8 +588,17 @@
             encodeURIComponent(qrUrl);
 
           const link = document.getElementById("link");
-          link.href = qrUrl;
+          link.href = "#";
           link.innerText = qrUrl;
+          link.style.cursor = "pointer";
+          link.onclick = (e) => {
+            e.preventDefault();
+            if (window.api && window.api.openExternal) {
+              window.api.openExternal(qrUrl);
+            } else {
+              console.error("API não disponível");
+            }
+          };
         })
         .catch(() => {
           document.getElementById("link").innerText = "Erro ao carregar";
@@ -613,8 +622,17 @@
               "https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=" +
               encodeURIComponent(d.url);
 
-            ipv6Link.href = d.url;
+            ipv6Link.href = "#";
             ipv6Link.innerText = d.url;
+            ipv6Link.style.cursor = "pointer";
+            ipv6Link.onclick = (e) => {
+              e.preventDefault();
+              if (window.api && window.api.openExternal) {
+                window.api.openExternal(d.url);
+              } else {
+                console.error("API não disponível");
+              }
+            };
           }
         })
         .catch(() => {

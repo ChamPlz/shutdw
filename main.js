@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, dialog, ipcMain } = require("electron");
+const { app, BrowserWindow, Tray, Menu, dialog, ipcMain, shell } = require("electron");
 const { autoUpdater } = require('electron-updater');
 const { hashPin } = require('./server/auth');
 const { loadConfig, saveConfig } = require('./server/config');
@@ -155,5 +155,14 @@ app.whenReady().then(() => {
   ipcMain.handle('check-auto-start', () => {
     const settings = app.getLoginItemSettings();
     return settings.openAtLogin;
-  })
+  });
+  ipcMain.handle('open-external', async (event, url) => {
+    try {
+      await shell.openExternal(url);
+      return { success: true };
+    } catch (err) {
+      console.error('Erro ao abrir link externo:', err);
+      return { error: err.message };
+    }
+  });
 });
