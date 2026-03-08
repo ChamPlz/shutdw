@@ -4,28 +4,46 @@ const { hashPin } = require('./server/auth');
 const { loadConfig, saveConfig } = require('./server/config');
 const path = require("path");
 
-let win;
-let tray;
-let allowQuit = false; // when true, allow the window to close (used during auto-update)
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+const WINDOW_CONFIG = {
+  width: 800,
+  height: 500,
+  minWidth: 800,
+  minHeight: 500,
+  maxWidth: 800,
+  maxHeight: 500,
+};
 
+// ============================================================================
+// STATE
+// ============================================================================
+let win = null;
+let tray = null;
+let allowQuit = false;
+
+// ============================================================================
+// WINDOW MANAGEMENT
+// ============================================================================
 function createWindow() {
   win = new BrowserWindow({
-    width: 800,
-    height: 500,
+    width: WINDOW_CONFIG.width,
+    height: WINDOW_CONFIG.height,
     frame: false,
     icon: path.join(__dirname, "build/icon.ico"),
-    autoHideMenuBar: true, // REMOVE File | Window
+    autoHideMenuBar: true,
     fullscreenable: false,
     resizable: false,
     fullscreen: false,
-    maxHeight: 500,
-    maxWidth: 800,
-    minHeight: 500,
-    minWidth: 800,
+    maxHeight: WINDOW_CONFIG.maxHeight,
+    maxWidth: WINDOW_CONFIG.maxWidth,
+    minHeight: WINDOW_CONFIG.minHeight,
+    minWidth: WINDOW_CONFIG.minWidth,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
     },
     transparent: true,
   });
@@ -35,87 +53,86 @@ function createWindow() {
   win.on("close", (e) => {
     if (!allowQuit) {
       e.preventDefault();
-      win.hide(); // Vai para ícones ocultos
+      win.hide();
     }
-    // if allowQuit is true, allow the default close behavior so app can exit for updates
   });
 }
 
 function closeApp() {
   allowQuit = false;
-  win.close();
+  if (win) {
+    win.close();
+  }
 }
 
-const gotTheLock = app.requestSingleInstanceLock();
-
-if (!gotTheLock) {
-  allowQuit = true;
-  app.exit();
-}
-
-app.whenReady().then(() => {
-  Menu.setApplicationMenu(null); // Remove menu global
-  createWindow();
-
+// ============================================================================
+// TRAY MENU
+// ============================================================================
+function createTray() {
   tray = new Tray(path.join(__dirname, "icon.ico"));
   tray.setToolTip("ShutDW - Desligamento automatico");
 
-  tray.setContextMenu(Menu.buildFromTemplate([
-    { label: "Abrir", click: () => win.show() },
+  const contextMenu = Menu.buildFromTemplate([
+    { label: "Abrir", click: () => win?.show() },
     { label: "Sair", click: () => app.exit() },
-  ]));
+  ]);
 
-  tray.on("double-click", () => win.show());
-});
+  tray.setContextMenu(contextMenu);
+  tray.on("double-click", () => win?.show());
+}
 
-app.whenReady().then(() => {
-  require("./server/webServer");
-
-  // Auto-updater: only run in packaged builds
-  if (app.isPackaged) {
-    autoUpdater.checkForUpdatesAndNotify();
-
-    autoUpdater.on('checking-for-update', () => {
-      console.log('Checking for updates...');
-    });
-
-    autoUpdater.on('update-available', info => {
-      console.log('Update available:', info.version);
-    });
-
-    autoUpdater.on('update-not-available', () => {
-      console.log('No update available');
-    });
-
-    autoUpdater.on('error', err => {
-      console.error('AutoUpdater error:', err);
-    });
-
-    autoUpdater.on('download-progress', progress => {
-      console.log(`Download progress: ${Math.round(progress.percent)}%`);
-    });
-
-    autoUpdater.on('update-downloaded', async (info) => {
-      const result = await dialog.showMessageBox(win, {
-        type: 'info',
-        buttons: ['Instalar e reiniciar o App', 'Depois'],
-        defaultId: 0,
-        cancelId: 1,
-        title: 'Atualização disponível',
-        message: `Versão ${info.version} baixada. Deseja instalar agora?`
-      });
-
-      if (result.response === 0) {
-        // allow the window to actually close when updater quits the app
-        allowQuit = true;
-        setTimeout(() => autoUpdater.quitAndInstall(), 1000);
-      }
-    });
-  } else {
+// ============================================================================
+// AUTO-UPDATER
+// ============================================================================
+function setupAutoUpdater() {
+  if (!app.isPackaged) {
     console.log('App is not packaged — auto-updates disabled in development');
+    return;
   }
 
-  // IPC: reset PIN (desktop only)
+  autoUpdater.checkForUpdatesAndNotify();
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for updates...');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('Update available:', info.version);
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    console.log('No update available');
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('AutoUpdater error:', err);
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    console.log(`Download progress: ${Math.round(progress.percent)}%`);
+  });
+
+  autoUpdater.on('update-downloaded', async (info) => {
+    const result = await dialog.showMessageBox(win, {
+      type: 'info',
+      buttons: ['Instalar e reiniciar o App', 'Depois'],
+      defaultId: 0,
+      cancelId: 1,
+      title: 'Atualização disponível',
+      message: `Versão ${info.version} baixada. Deseja instalar agora?`
+    });
+
+    if (result.response === 0) {
+      allowQuit = true;
+      setTimeout(() => autoUpdater.quitAndInstall(), 1000);
+    }
+  });
+}
+
+// ============================================================================
+// IPC HANDLERS
+// ============================================================================
+function setupIpcHandlers() {
   ipcMain.handle('reset-pin', async (event, newPin) => {
     try {
       if (typeof newPin !== 'string' || newPin.length < 4) {
@@ -132,30 +149,30 @@ app.whenReady().then(() => {
       return { error: 'Erro ao redefinir PIN' };
     }
   });
+
   ipcMain.handle('close-app', () => {
     closeApp();
   });
+
   ipcMain.handle('set-auto-start', (event, enable) => {
-    if (enable !== true && enable !== false) {
+    if (typeof enable !== 'boolean') {
       return;
     }
-    if (enable == true){
+
     app.setLoginItemSettings({
       openAtLogin: enable,
     });
-  } else {
-    app.setLoginItemSettings({
-      openAtLogin: false,
-    });
-  }
-  const cfg = loadConfig();
-  cfg.autoStart = enable;
-  saveConfig(cfg);
+
+    const cfg = loadConfig();
+    cfg.autoStart = enable;
+    saveConfig(cfg);
   });
+
   ipcMain.handle('check-auto-start', () => {
     const settings = app.getLoginItemSettings();
     return settings.openAtLogin;
   });
+
   ipcMain.handle('open-external', async (event, url) => {
     try {
       await shell.openExternal(url);
@@ -165,4 +182,33 @@ app.whenReady().then(() => {
       return { error: err.message };
     }
   });
+}
+
+// ============================================================================
+// APP INITIALIZATION
+// ============================================================================
+function initializeApp() {
+  Menu.setApplicationMenu(null);
+  createWindow();
+  createTray();
+  setupIpcHandlers();
+  setupAutoUpdater();
+}
+
+// ============================================================================
+// SINGLE INSTANCE LOCK
+// ============================================================================
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  allowQuit = true;
+  app.exit();
+}
+
+// ============================================================================
+// APP EVENTS
+// ============================================================================
+app.whenReady().then(() => {
+  require("./server/webServer");
+  initializeApp();
 });

@@ -1,7 +1,28 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
+/**
+ * API exposta para o overlay
+ */
 contextBridge.exposeInMainWorld("overlay", {
-  onUpdate: (cb) => ipcRenderer.on("overlay:update", (_, s) => cb(s)),
-  cancel: () => ipcRenderer.send("overlay:cancel"),
-  close: () => ipcRenderer.send("overlay:close"), 
+  /**
+   * Registra callback para atualizações de tempo
+   * @param {function} callback - Função chamada com o tempo restante em segundos
+   */
+  onUpdate: (callback) => {
+    ipcRenderer.on("overlay:update", (_, seconds) => callback(seconds));
+  },
+
+  /**
+   * Cancela o desligamento agendado
+   */
+  cancel: () => {
+    ipcRenderer.send("overlay:cancel");
+  },
+
+  /**
+   * Fecha a janela de overlay
+   */
+  close: () => {
+    ipcRenderer.send("overlay:close");
+  },
 });

@@ -2,44 +2,84 @@ const fs = require("fs");
 const path = require("path");
 const { app } = require("electron");
 
+/**
+ * Caminho para o diretório de configuração
+ */
 const configDir = path.join(app.getPath("userData"), "config");
 const configPath = path.join(configDir, "config.json");
 
+/**
+ * Configuração padrão
+ */
 const defaultConfig = {
   pin: null,
   scheduledAt: null,
   autoStart: false,
-  useIPv6: false
+  useIPv6: false,
 };
 
-function loadConfig() {
+/**
+ * Garante que o diretório de configuração exista
+ */
+function ensureConfigDir() {
   if (!fs.existsSync(configDir)) {
     fs.mkdirSync(configDir, { recursive: true });
   }
+}
+
+/**
+ * Valida e normaliza a configuração
+ * @param {object} config - Configuração para validar
+ * @returns {object} Configuração validada
+ */
+function validateConfig(config) {
+  return {
+    pin: config.pin ?? null,
+    scheduledAt: config.scheduledAt ?? null,
+    autoStart: Boolean(config.autoStart),
+    useIPv6: Boolean(config.useIPv6),
+  };
+}
+
+/**
+ * Carrega a configuração do arquivo
+ * @returns {object} Configuração carregada
+ */
+function loadConfig() {
+  ensureConfigDir();
 
   if (!fs.existsSync(configPath)) {
-    fs.writeFileSync(
-      configPath,
-      JSON.stringify(defaultConfig, null, 2),
-      "utf-8"
-    );
-    return defaultConfig;
+    saveConfig(defaultConfig);
+    return { ...defaultConfig };
   }
 
   try {
-    return JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    const content = fs.readFileSync(configPath, "utf-8");
+    const parsed = JSON.parse(content);
+    return validateConfig(parsed);
   } catch (err) {
     console.error("Erro ao ler config.json:", err);
-    return defaultConfig;
+    return { ...defaultConfig };
   }
 }
 
+/**
+ * Salva a configuração no arquivo
+ * @param {object} config - Configuração para salvar
+ */
 function saveConfig(config) {
+  ensureConfigDir();
+  const validatedConfig = validateConfig(config);
   fs.writeFileSync(
     configPath,
-    JSON.stringify(config, null, 2),
+    JSON.stringify(validatedConfig, null, 2),
     "utf-8"
   );
 }
 
-module.exports = { loadConfig, saveConfig };
+module.exports = {
+  loadConfig,
+  saveConfig,
+  defaultConfig,
+  configPath,
+};
