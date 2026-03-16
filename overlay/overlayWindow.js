@@ -31,8 +31,11 @@ function createOverlay() {
 
   overlayWindow.loadFile(path.join(__dirname, "overlay.html"));
 
-  overlayWindow.on("closed", () => {
-    overlayWindow = null;
+  const win = overlayWindow;
+  win.on("closed", () => {
+    if (overlayWindow === win) {
+      overlayWindow = null;
+    }
   });
 
   return overlayWindow;

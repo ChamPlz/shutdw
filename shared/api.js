@@ -139,7 +139,7 @@ function switchTab(tabName, btnSelector = ".nav-item") {
  * @param {HTMLElement} msgEl
  * @param {function} onSuccess - Callback ao criar com sucesso
  */
-function createFirstPin(baseUrl, pinInput, confirmInput, msgEl, onSuccess) {
+function createInitialPin(baseUrl, pinInput, confirmInput, msgEl, onSuccess) {
   const pin = pinInput?.value;
   const confirm = confirmInput?.value;
 
@@ -177,7 +177,7 @@ function createFirstPin(baseUrl, pinInput, confirmInput, msgEl, onSuccess) {
  * @param {HTMLInputElement} newPinInput
  * @param {HTMLElement} statusEl
  */
-function savePin(baseUrl, currentPinInput, newPinInput, statusEl) {
+function savePinChange(baseUrl, currentPinInput, newPinInput, statusEl) {
   const currentPin = currentPinInput?.value;
   const newPin = newPinInput?.value;
 
@@ -212,7 +212,7 @@ function savePin(baseUrl, currentPinInput, newPinInput, statusEl) {
  * @param {string} pin
  * @param {function} onResult - Callback com (message, isError)
  */
-function scheduleExact(baseUrl, timePickerEl, pin, onResult) {
+function scheduleExactTime(baseUrl, timePickerEl, pin, onResult) {
   const timeValue = timePickerEl?.value;
   if (!timeValue) {
     onResult("Por favor, selecione um horário", true);

@@ -1,3 +1,11 @@
+# 1.0.39
+## Change Log
+### Version v1.0.39 - 2026-03-16
+
+#### Fixed
+- Resolvido um *bug* crítico de corrida (Race Condition) no overlay de contagem onde múltiplos cliques rápidos em "60 minutos" causavam janelas fantasmas incontroláveis. Agora a janela sobreposta existente é inteligentemente reciclada ao reagendar.
+
+---
 # 1.0.38
 ## Change Log
 ### Version v1.0.38 - 2026-03-16

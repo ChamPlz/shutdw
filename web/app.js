@@ -56,15 +56,15 @@ function send(route) {
 }
 
 function handleScheduleExact() {
-  scheduleExact(API_URL, el.timePicker, el.pin?.value, displayStatus);
+  scheduleExactTime(API_URL, el.timePicker, el.pin?.value, displayStatus);
 }
 
 function handleSavePin() {
-  savePin(API_URL, el.currentPin, el.newPin, el.configStatus);
+  savePinChange(API_URL, el.currentPin, el.newPin, el.configStatus);
 }
 
 function handleCreateFirstPin() {
-  createFirstPin(API_URL, el.firstPin, el.firstPinConfirm, el.pinModalMsg, () => {
+  createInitialPin(API_URL, el.firstPin, el.firstPinConfirm, el.pinModalMsg, () => {
     el.pinModal?.classList.add("hidden");
   });
 }
