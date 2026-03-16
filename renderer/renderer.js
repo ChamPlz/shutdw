@@ -20,6 +20,7 @@ function init() {
   cacheElements();
   setupAutoStart();
   setupIPv6Settings();
+  setupAbout();
   loadQRCode(API_URL, el.qr, el.link, (url) => window.api?.openExternal(url));
   checkPinConfigured();
   startStatusPolling(API_URL, el.timer, el.statusCard);
@@ -51,6 +52,14 @@ function cacheElements() {
   el.qrIpv6 = $("qr-ipv6");
   el.link = $("link");
   el.ipv6Link = $("ipv6Link");
+  // About / Updates
+  el.appVersion = $("appVersion");
+  el.updateMessage = $("updateMessage");
+  el.updateProgress = $("updateProgress");
+  el.updateProgressBar = $("updateProgressBar");
+  el.updatePercent = $("updatePercent");
+  el.btnCheckUpdate = $("btnCheckUpdate");
+  el.btnInstallUpdate = $("btnInstallUpdate");
 }
 
 // ============================================================================
@@ -251,9 +260,93 @@ function showQRCode(mode) {
 }
 
 // ============================================================================
+// ABOUT / UPDATES
+// ============================================================================
+function setupAbout() {
+  // Exibir versão
+  window.api?.getVersion().then(version => {
+    if (el.appVersion) el.appVersion.textContent = `v${version}`;
+  });
+
+  // Listener de eventos de atualização
+  window.api?.onUpdateEvent((data) => {
+    switch (data.event) {
+      case "checking":
+        setUpdateMessage("Verificando atualizações...");
+        if (el.btnCheckUpdate) el.btnCheckUpdate.disabled = true;
+        break;
+
+      case "available":
+        setUpdateMessage(`Nova versão ${data.version} encontrada! Baixando...`);
+        showProgress(true);
+        break;
+
+      case "not-available":
+        setUpdateMessage("✓ Você está na versão mais recente!");
+        if (el.btnCheckUpdate) el.btnCheckUpdate.disabled = false;
+        break;
+
+      case "progress":
+        updateProgress(data.percent);
+        break;
+
+      case "downloaded":
+        setUpdateMessage(`Versão ${data.version} baixada e pronta para instalar!`);
+        showProgress(false);
+        if (el.btnCheckUpdate) el.btnCheckUpdate.style.display = "none";
+        if (el.btnInstallUpdate) el.btnInstallUpdate.style.display = "inline-flex";
+        break;
+
+      case "error":
+        setUpdateMessage(`Erro ao verificar: ${data.message}`);
+        if (el.btnCheckUpdate) el.btnCheckUpdate.disabled = false;
+        showProgress(false);
+        break;
+    }
+  });
+}
+
+function setUpdateMessage(msg) {
+  if (el.updateMessage) el.updateMessage.textContent = msg;
+}
+
+function showProgress(show) {
+  if (el.updateProgress) el.updateProgress.style.display = show ? "block" : "none";
+}
+
+function updateProgress(percent) {
+  if (el.updateProgressBar) el.updateProgressBar.style.width = `${percent}%`;
+  if (el.updatePercent) el.updatePercent.textContent = `${percent}%`;
+}
+
+function checkForUpdates() {
+  if (!window.api?.checkForUpdates) {
+    setUpdateMessage("Indisponível neste ambiente");
+    return;
+  }
+  window.api.checkForUpdates().then(result => {
+    if (result.status === "dev") {
+      setUpdateMessage(result.message);
+    }
+  });
+}
+
+function installUpdate() {
+  setUpdateMessage("Instalando e reiniciando...");
+  window.api?.installUpdate();
+}
+
+// ============================================================================
 // GLOBAL EXPORTS (para onclick no HTML)
 // ============================================================================
-window.showTab = (tabName) => switchTab(tabName, ".nav-item");
+window.showTab = (tabName) => {
+  // Tratar aba About (usa display flex para centralizar)
+  const aboutPanel = document.getElementById("about");
+  if (aboutPanel) {
+    aboutPanel.style.display = tabName === "about" ? "flex" : "none";
+  }
+  switchTab(tabName, ".nav-item");
+};
 window.send = send;
 window.scheduleExact = handleScheduleExact;
 window.savePin = handleSavePin;
@@ -261,6 +354,8 @@ window.resetPinDesktop = resetPinDesktop;
 window.createFirstPin = handleCreateFirstPin;
 window.showQRCode = showQRCode;
 window.toggleIPv6 = toggleIPv6;
+window.checkForUpdates = checkForUpdates;
+window.installUpdate = installUpdate;
 
 // ============================================================================
 // START

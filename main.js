@@ -74,48 +74,100 @@ function createTray() {
   tray.setToolTip("ShutDW - Desligamento automático");
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: "Abrir", click: () => restoreWindow() },
-    { label: "Sair", click: () => app.exit() },
+    { label: "Abrir ShutDW", click: () => restoreWindow() },
+    { type: "separator" },
+    {
+      label: "Desligar em...",
+      submenu: [
+        { label: "10 minutos", click: () => triggerShutdown(10) },
+        { label: "30 minutos", click: () => triggerShutdown(30) },
+        { label: "60 minutos", click: () => triggerShutdown(60) },
+      ],
+    },
+    { label: "Cancelar Agendamento", click: () => triggerCancel() },
+    { type: "separator" },
+    {
+      label: "Sair",
+      click: () => {
+        allowQuit = true;
+        app.quit();
+      },
+    },
   ]);
 
   tray.setContextMenu(contextMenu);
   tray.on("double-click", () => restoreWindow());
 }
 
+/**
+ * Dispara agendamento de shutdown via requisição local
+ */
+function triggerShutdown(minutes) {
+  const http = require("http");
+  const req = http.request({ hostname: "localhost", port: 3333, path: `/shutdown/${minutes}`, method: "POST" });
+  req.on("error", (err) => console.error("Erro ao agendar pelo tray:", err));
+  req.end();
+}
+
+/**
+ * Cancela o agendamento via requisição local
+ */
+function triggerCancel() {
+  const http = require("http");
+  const req = http.request({ hostname: "localhost", port: 3333, path: "/cancel", method: "POST" });
+  req.on("error", (err) => console.error("Erro ao cancelar pelo tray:", err));
+  req.end();
+}
+
 // ============================================================================
 // AUTO-UPDATER
 // ============================================================================
+
+/**
+ * Envia evento de atualização para o renderer
+ */
+function sendUpdateEvent(event, data = {}) {
+  if (win && !win.isDestroyed()) {
+    win.webContents.send("update-event", { event, ...data });
+  }
+}
+
 function setupAutoUpdater() {
   if (!app.isPackaged) {
     console.log("Auto-updates disabled in development");
     return;
   }
 
-  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on("checking-for-update", () => {
+    sendUpdateEvent("checking");
+  });
 
   autoUpdater.on("update-available", (info) => {
-    console.log("Update available:", info.version);
+    sendUpdateEvent("available", { version: info.version });
+  });
+
+  autoUpdater.on("update-not-available", (info) => {
+    sendUpdateEvent("not-available", { version: info.version });
+  });
+
+  autoUpdater.on("download-progress", (progress) => {
+    sendUpdateEvent("progress", { percent: Math.round(progress.percent) });
+  });
+
+  autoUpdater.on("update-downloaded", (info) => {
+    sendUpdateEvent("downloaded", { version: info.version });
   });
 
   autoUpdater.on("error", (err) => {
     console.error("AutoUpdater error:", err);
+    sendUpdateEvent("error", { message: err.message });
   });
 
-  autoUpdater.on("update-downloaded", async (info) => {
-    const result = await dialog.showMessageBox(win, {
-      type: "info",
-      buttons: ["Instalar e reiniciar o App", "Depois"],
-      defaultId: 0,
-      cancelId: 1,
-      title: "Atualização disponível",
-      message: `Versão ${info.version} baixada. Deseja instalar agora?`,
-    });
-
-    if (result.response === 0) {
-      allowQuit = true;
-      setTimeout(() => autoUpdater.quitAndInstall(), 1000);
-    }
-  });
+  // Verificação automática ao iniciar
+  autoUpdater.checkForUpdates().catch(() => {});
 }
 
 // ============================================================================
@@ -164,6 +216,27 @@ function setupIpcHandlers() {
       console.error("Erro ao abrir link externo:", err);
       return { error: err.message };
     }
+  });
+
+  ipcMain.handle("get-app-version", () => {
+    return app.getVersion();
+  });
+
+  ipcMain.handle("check-for-updates", async () => {
+    if (!app.isPackaged) {
+      return { status: "dev", message: "Atualizações desabilitadas em desenvolvimento" };
+    }
+    try {
+      const result = await autoUpdater.checkForUpdates();
+      return { status: "ok", version: result?.updateInfo?.version };
+    } catch (err) {
+      return { status: "error", message: err.message };
+    }
+  });
+
+  ipcMain.handle("install-update", () => {
+    allowQuit = true;
+    setTimeout(() => autoUpdater.quitAndInstall(), 1000);
   });
 }
 

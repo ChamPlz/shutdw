@@ -63,6 +63,14 @@
           </svg>
           <span>Configurações</span>
         </button>
+        <button class="nav-item" onclick="showTab('about')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <span>Sobre</span>
+        </button>
       </nav>
 
       <div class="sidebar-footer">
@@ -300,6 +308,63 @@
         </div>
       </div>
     </main>
+
+    <!-- About Tab (fora do main para ocupar tela toda ou dentro, como preferir) -->
+    <div id="about" class="tab-content hidden" style="position: absolute; inset: 0; z-index: 10; background: rgba(18, 14, 32, 0.97); display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px;">
+      <button onclick="showTab('control')" style="position: absolute; top: 16px; left: 16px; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.25); color: #a78bfa; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: background 0.2s;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        Voltar
+      </button>
+      <div style="text-align: center; max-width: 400px;">
+        <div style="margin-bottom: 20px;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2">
+            <path d="M13 2L3 14h8l-2 8 10-12h-8l2-8z" />
+          </svg>
+        </div>
+        <h1 style="font-size: 28px; font-weight: 700; color: #fff; margin: 0 0 4px 0;">ShutDW</h1>
+        <p style="color: #a78bfa; font-size: 14px; margin: 0 0 6px 0;">Controle de Energia</p>
+        <p id="appVersion" style="color: #666; font-size: 13px; margin: 0 0 24px 0;">v...</p>
+
+        <div id="updateStatus" style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 10px; padding: 16px; margin-bottom: 20px; min-height: 50px; display: flex; align-items: center; justify-content: center;">
+          <p id="updateMessage" style="color: #c4b5fd; font-size: 13px; margin: 0;">Pronto para verificar</p>
+        </div>
+
+        <div id="updateProgress" style="display: none; margin-bottom: 16px;">
+          <div style="background: rgba(168, 85, 247, 0.15); border-radius: 8px; height: 6px; overflow: hidden;">
+            <div id="updateProgressBar" style="background: linear-gradient(90deg, #a855f7, #7c3aed); height: 100%; width: 0%; border-radius: 8px; transition: width 0.3s ease;"></div>
+          </div>
+          <p id="updatePercent" style="color: #a78bfa; font-size: 12px; margin: 6px 0 0 0;">0%</p>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+          <button id="btnCheckUpdate" class="btn btn-primary" onclick="checkForUpdates()" style="flex: 1; min-width: 150px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+            Verificar Atualização
+          </button>
+          <button id="btnInstallUpdate" class="btn btn-primary" onclick="installUpdate()" style="flex: 1; min-width: 150px; display: none; background: linear-gradient(135deg, #22c55e, #16a34a);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Instalar e Reiniciar
+          </button>
+        </div>
+
+        <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid rgba(168, 85, 247, 0.15);">
+          <p style="color: #555; font-size: 12px; margin: 0 0 8px 0;">Desenvolvido por <span style="color: #a78bfa;">ChamPlz</span></p>
+          <a href="#" onclick="window.api.openExternal('https://github.com/ChamPlz/shutdw'); return false;" style="color: #7c3aed; font-size: 12px; text-decoration: none;">
+            github.com/ChamPlz/shutdw
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="../shared/api.js"></script>
