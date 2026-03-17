@@ -22,13 +22,18 @@ let allowQuit = false;
 function restoreWindow() {
   if (!win) return;
 
-  win.setSkipTaskbar(false);
-  win.show();
-
   if (win.isMinimized()) {
     win.restore();
   }
 
+  win.show();
+  // Toggle setSkipTaskbar to force Windows to redraw the taskbar icon 
+  // (known bug with transparent frameless windows)
+  setTimeout(() => {
+    win.setSkipTaskbar(true);
+    win.setSkipTaskbar(false);
+  }, 10);
+  
   win.focus();
 }
 
@@ -63,6 +68,11 @@ function createWindow() {
       win.hide();
       win.setSkipTaskbar(true);
     }
+  });
+
+  win.on("restore", () => {
+    win.setSkipTaskbar(true);
+    win.setSkipTaskbar(false);
   });
 }
 

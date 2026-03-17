@@ -1,3 +1,11 @@
+# 1.0.40
+## Change Log
+### Version v1.0.40 - 2026-03-17
+
+#### Fixed
+- Correção avançada para o *bug* crônico do Electron no Windows onde o ícone do aplicativo desaparecia misteriosamente da barra de tarefas principal do sistema após uma janela transparente e sem bordas (*frameless*) ser escondida e restaurada. Foi implementado um sistema de redrawn dinâmico nas interações via System Tray.
+
+---
 # 1.0.39
 ## Change Log
 ### Version v1.0.39 - 2026-03-16
