@@ -3,5 +3,5 @@
 .env
 /data
 RELEASE.md
-
+release.bat
 REFACTORING_SUMMARY.md

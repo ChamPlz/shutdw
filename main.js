@@ -27,14 +27,16 @@ function restoreWindow() {
   }
 
   win.show();
-  // Toggle setSkipTaskbar to force Windows to redraw the taskbar icon 
-  // (known bug with transparent frameless windows)
+  win.setSkipTaskbar(false); // garante que está visível antes do toggle
+  win.focus();
+
+  // Delay maior para o Windows ter tempo de processar o ícone
   setTimeout(() => {
     win.setSkipTaskbar(true);
-    win.setSkipTaskbar(false);
-  }, 10);
-  
-  win.focus();
+    setTimeout(() => {
+      win.setSkipTaskbar(false);
+    }, 150); // <-- era tudo em 10ms, agora é escalonado
+  }, 100);
 }
 
 // ============================================================================
@@ -68,11 +70,6 @@ function createWindow() {
       win.hide();
       win.setSkipTaskbar(true);
     }
-  });
-
-  win.on("restore", () => {
-    win.setSkipTaskbar(true);
-    win.setSkipTaskbar(false);
   });
 }
 

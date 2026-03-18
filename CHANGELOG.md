@@ -1,3 +1,11 @@
+# 1.0.41
+## Change Log
+### Version v1.0.41 - 2026-03-18
+
+#### Fixed
+- Melhoria na correção do ícone da barra de tarefas (Taskbar Bug): os tempos de atualização foram escalonados (delays de 100ms e 150ms) para garantir que o Windows processe o redesenho do ícone com sucesso ao restaurar o app.
+
+---
 # 1.0.40
 ## Change Log
 ### Version v1.0.40 - 2026-03-17
