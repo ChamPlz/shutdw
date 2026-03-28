@@ -1,3 +1,12 @@
+# 1.1.1
+## Change Log
+### Version v1.1.1 - 2026-03-28
+
+#### Fixed
+- Ícone `build/icon.png` redimensionado para 512×512 (requisito do macOS).
+- Campo `author` no `package.json` agora inclui email (requisito do Linux .deb).
+
+---
 # 1.1.0
 ## Change Log
 ### Version v1.1.0 - 2026-03-28
