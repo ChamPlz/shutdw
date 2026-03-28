@@ -4,6 +4,13 @@ const { hashPin } = require("./server/auth");
 const { loadConfig, saveConfig } = require("./server/config");
 const path = require("path");
 
+// Ícone correto por plataforma (.ico para Windows, .png para Linux/macOS)
+const iconExt = process.platform === "win32" ? "ico" : "png";
+const appIcon = path.join(__dirname, `build/icon.${iconExt}`);
+const trayIcon = process.platform === "win32"
+  ? path.join(__dirname, "icon.ico")
+  : path.join(__dirname, "build/icon.png");
+
 // ============================================================================
 // STATE
 // ============================================================================
@@ -51,7 +58,7 @@ function createWindow() {
     maxWidth: 800,
     maxHeight: 500,
     frame: false,
-    icon: path.join(__dirname, "build/icon.ico"),
+    icon: appIcon,
     autoHideMenuBar: true,
     resizable: false,
     transparent: true,
@@ -77,7 +84,7 @@ function createWindow() {
 // TRAY
 // ============================================================================
 function createTray() {
-  tray = new Tray(path.join(__dirname, "icon.ico"));
+  tray = new Tray(trayIcon);
   tray.setToolTip("ShutDW - Desligamento automático");
 
   const contextMenu = Menu.buildFromTemplate([

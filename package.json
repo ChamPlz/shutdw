@@ -14,6 +14,9 @@
     "start": "electron .",
     "dev": "electron .",
     "build": "electron-builder build --win --publish never",
+    "build:win": "electron-builder build --win --publish never",
+    "build:linux": "electron-builder build --linux --publish never",
+    "build:mac": "electron-builder build --mac --publish never",
     "build:all": "electron-builder build --win --x64 --ia32",
     "publish": "electron-builder build --win --publish always"
   },
@@ -29,8 +32,8 @@
   },
   "build": {
     "appId": "com.carlos.shutdw",
-    "productName": "ShutDW - Desligamento automatico",
-    "npmRebuild": false,
+    "productName": "ShutDW",
+    "npmRebuild": true,
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -59,6 +62,34 @@
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico"
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "category": "public.app-category.utilities",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["universal"]
+        },
+        {
+          "target": "zip",
+          "arch": ["universal"]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Utility",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
+      ]
     },
     "publish": [
       {

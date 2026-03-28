@@ -1,4 +1,4 @@
-name: Build and Publish
+name: Build/Release Electron App
 
 permissions:
   contents: write
@@ -6,13 +6,35 @@ permissions:
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build on Windows and Publish
-    runs-on: windows-latest
+  release:
+    name: Build (${{ matrix.platform }} ${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ── Windows ──
+          - os: windows-latest
+            platform: windows
+            arch: x64
+          - os: windows-latest
+            platform: windows
+            arch: ia32
+
+          # ── Linux ──
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+
+          # ── macOS ──
+          - os: macos-latest
+            platform: mac
+            arch: universal
 
     steps:
       - name: Checkout code
@@ -33,18 +55,38 @@ jobs:
           echo "Node version: $(node --version)"
           echo "NPM version: $(npm --version)"
 
-      - name: Build and publish
+      # ── Build per platform ──
+      - name: Build and Publish (Windows)
+        if: matrix.platform == 'windows'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run publish
+        run: npx electron-builder --windows --${{ matrix.arch }} --publish always
 
+      - name: Build and Publish (Linux)
+        if: matrix.platform == 'linux'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --linux --${{ matrix.arch }} --publish always
+
+      - name: Build and Publish (macOS)
+        if: matrix.platform == 'mac'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY: '-'
+        run: npx electron-builder --mac --${{ matrix.arch }} --publish always
+
+      # ── Upload artifacts ──
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: windows-installers
+          name: ${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.deb
             dist/*.yml
             dist/*.blockmap
           retention-days: 30

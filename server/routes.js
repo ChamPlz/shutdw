@@ -4,6 +4,7 @@ const { loadConfig, saveConfig } = require("./config");
 const { getOutboundIp, getOutboundIpv6, hasIPv6Available, isIPv6 } = require("./network");
 const { scheduleShutdown, cancelShutdown } = require("./shutdown");
 const { exec } = require("child_process");
+const platform = require("./platform");
 
 const PORT = 3333;
 
@@ -141,7 +142,7 @@ function createRoutes(config) {
   // ==========================================================================
 
   router.post("/shutdown", (req, res) => {
-    exec("shutdown /s /t 15");
+    exec(platform.shutdownWithDelay(15));
     res.json({ status: "Desligando agora" });
   });
 

@@ -1,6 +1,7 @@
 const { exec } = require("child_process");
 const { saveConfig } = require("./config");
 const { createOverlay, closeOverlay, sendRemaining } = require("../overlay/overlayWindow");
+const platform = require("./platform");
 
 // ============================================================================
 // STATE
@@ -20,7 +21,7 @@ function scheduleShutdown(timestamp, config) {
   }
   
   // Tenta cancelar algum desligamento do SO pendente
-  exec("shutdown /a", () => {}); // Ignora erros se não houver desligamento pendente
+  exec(platform.cancelSystemShutdown(), () => {}); // Ignora erros se não houver desligamento pendente
 
   const delay = timestamp - Date.now();
   if (delay <= 0) return;
@@ -41,7 +42,7 @@ function scheduleShutdown(timestamp, config) {
       closeOverlay();
       config.scheduledAt = null;
       saveConfig(config);
-      exec("shutdown /s /t 0");
+      exec(platform.shutdownNow());
     }
   }, 1000);
 
@@ -62,7 +63,7 @@ function cancelShutdown(config) {
   closeOverlay();
   config.scheduledAt = null;
   saveConfig(config);
-  exec("shutdown /a");
+  exec(platform.cancelSystemShutdown());
 }
 
 module.exports = {
