@@ -1,9 +1,12 @@
 {
   "name": "shutdw",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "App Electron para desligar/reiniciar o Windows com acesso web",
   "main": "main.js",
-  "author": "ChamPlz",
+  "author": {
+    "name": "ChamPlz",
+    "email": "carlos_junior41@hotmail.com"
+  },
   "license": "PolyForm-Noncommercial-1.0.0",
   "homepage": "https://github.com/ChamPlz/shutdw",
   "repository": {
