@@ -1,6 +1,6 @@
 {
   "name": "shutdw",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "App Electron para desligar/reiniciar o Windows com acesso web",
   "main": "main.js",
   "author": {
@@ -69,6 +69,7 @@
     "mac": {
       "icon": "build/icon.png",
       "category": "public.app-category.utilities",
+      "x64ArchFiles": "Contents/Resources/app.asar.unpacked/node_modules/argon2/prebuilds/**",
       "target": [
         {
           "target": "dmg",
