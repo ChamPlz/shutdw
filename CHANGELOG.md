@@ -1,3 +1,16 @@
+# 1.1.0
+## Change Log
+### Version v1.1.0 - 2026-03-28
+
+#### Added
+- Suporte multiplataforma nativo (Windows, Linux, macOS).
+- Workflow CI/CD completo (GitHub Actions) para publicação de binários multiplataforma.
+
+#### Changed
+- Licença atualizada para PolyForm Noncommercial 1.0.0.
+- Otimização do Electron Builder para as novas arquiteturas de destino.
+
+---
 # 1.0.41
 ## Change Log
 ### Version v1.0.41 - 2026-03-18
