@@ -78,23 +78,44 @@ function updateTimer(timerEl, containerEl, remaining) {
 }
 
 /**
- * Inicia polling de status a cada segundo
+ * Inicia polling de status com backoff inteligente
  * @param {string} baseUrl
  * @param {HTMLElement} timerEl
  * @param {HTMLElement} containerEl
- * @returns {number} ID do interval
+ * @returns {function} Função de cleanup
  */
 function startStatusPolling(baseUrl, timerEl, containerEl) {
-  return setInterval(() => {
+  let intervalId = null;
+  let hasActiveShutdown = false;
+
+  function poll() {
     apiRequest(baseUrl, "/status")
-      .then(data => updateTimer(timerEl, containerEl, data.remaining))
+      .then(data => {
+        updateTimer(timerEl, containerEl, data.remaining);
+        // Se não há shutdown ativo, reduz frequência para 5s
+        if (data.remaining == null && hasActiveShutdown) {
+          hasActiveShutdown = false;
+          clearInterval(intervalId);
+          intervalId = setInterval(poll, 5000);
+        } else if (data.remaining != null) {
+          hasActiveShutdown = true;
+        }
+      })
       .catch(() => {
         if (timerEl) {
           timerEl.textContent = "";
           timerEl.classList.add("hidden");
         }
       });
-  }, 1000);
+  }
+
+  // Inicia polling rápido (1s)
+  intervalId = setInterval(poll, 1000);
+
+  // Retorna função de cleanup
+  return () => {
+    if (intervalId) clearInterval(intervalId);
+  };
 }
 
 /**

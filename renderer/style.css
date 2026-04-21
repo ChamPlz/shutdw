@@ -108,6 +108,8 @@ body::before {
   animation: float 20s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 @keyframes float {

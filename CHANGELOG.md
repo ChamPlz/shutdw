@@ -1,3 +1,31 @@
+# 1.1.3
+## Change Log
+### Version v1.1.3 - 2026-04-21
+
+#### Added
+- Dependabot configurado para atualizações automáticas de dependências (`.github/dependabot.yml`).
+
+#### Changed
+- Dependências atualizadas para maior estabilidade e segurança:
+  - `electron-builder` atualizado para v26.8.1
+  - `tar` atualizado (correções de segurança)
+  - `electron` atualizado para v39.8.5
+  - `argon2` atualizado para v0.44.0
+  - `express-rate-limit` atualizado para v8.2.2
+
+#### Performance
+- Cache em memória da configuração (`server/config.js`) para evitar I/O síncrono em cada requisição.
+- Polling de status com backoff inteligente: reduz de 1s para 5s quando não há shutdown ativo (`shared/api.js`).
+- Auto-updater agora aguarda 3 segundos após startup para verificar atualizações, não bloqueando a inicialização da UI (`main.js`).
+- Animação CSS do background com GPU acceleration (`will-change: transform`) para renderização mais suave (`renderer/style.css`).
+
+#### Fixed
+- Debounce em `checkPinConfigured()` para evitar múltiplas requisições paralelas à API (`renderer/renderer.js`).
+- Timeout de 5 segundos em todos os comandos `exec()` para prevenir processos zombie (`server/shutdown.js`, `server/routes.js`).
+- `require("http")` movido para o topo do arquivo, evitando carregamento repetido em chamadas do tray menu (`main.js`).
+- Função de cleanup do polling de status para prevenir memory leak em sessões longas (`renderer/renderer.js`).
+
+---
 # 1.1.1
 ## Change Log
 ### Version v1.1.1 - 2026-03-28

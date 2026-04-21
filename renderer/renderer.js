@@ -14,6 +14,11 @@ const API_URL = "http://localhost:3333";
 const el = {};
 
 // ============================================================================
+// POLLING CLEANUP
+// ============================================================================
+let statusPollingCleanup = null;
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 function init() {
@@ -23,7 +28,7 @@ function init() {
   setupAbout();
   loadQRCode(API_URL, el.qr, el.link, (url) => window.api?.openExternal(url));
   checkPinConfigured();
-  startStatusPolling(API_URL, el.timer, el.statusCard);
+  statusPollingCleanup = startStatusPolling(API_URL, el.timer, el.statusCard);
 }
 
 function cacheElements() {
@@ -115,30 +120,36 @@ async function resetPinDesktop() {
 // ============================================================================
 // PIN CHECK
 // ============================================================================
+let pinCheckPromise = null;
+
 function checkPinConfigured() {
-  apiRequest(API_URL, "/config/pin")
-    .then(data => {
-      if (!data.configured) {
-        el.pinModal?.classList.remove("hidden");
+  if (!pinCheckPromise) {
+    pinCheckPromise = apiRequest(API_URL, "/config/pin")
+      .then(data => {
+        if (!data.configured) {
+          el.pinModal?.classList.remove("hidden");
+          const closeBtn = document.querySelector(".close-btn");
+          if (closeBtn) {
+            closeBtn.disabled = true;
+            closeBtn.style.opacity = "0.5";
+            closeBtn.style.cursor = "not-allowed";
+          }
+        } else {
+          if (el.pinModal) el.pinModal.style.display = "none";
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
         const closeBtn = document.querySelector(".close-btn");
         if (closeBtn) {
-          closeBtn.disabled = true;
-          closeBtn.style.opacity = "0.5";
-          closeBtn.style.cursor = "not-allowed";
+          closeBtn.disabled = false;
+          closeBtn.style.opacity = "1";
+          closeBtn.style.cursor = "pointer";
         }
-      } else {
-        if (el.pinModal) el.pinModal.style.display = "none";
-      }
-    })
-    .catch(() => {})
-    .finally(() => {
-      const closeBtn = document.querySelector(".close-btn");
-      if (closeBtn) {
-        closeBtn.disabled = false;
-        closeBtn.style.opacity = "1";
-        closeBtn.style.cursor = "pointer";
-      }
-    });
+        pinCheckPromise = null;
+      });
+  }
+  return pinCheckPromise;
 }
 
 // ============================================================================

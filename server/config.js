@@ -19,6 +19,11 @@ const defaultConfig = {
 };
 
 /**
+ * Cache em memória da configuração
+ */
+let configCache = null;
+
+/**
  * Garante que o diretório de configuração exista
  */
 function ensureConfigDir() {
@@ -42,10 +47,12 @@ function validateConfig(config) {
 }
 
 /**
- * Carrega a configuração do arquivo
+ * Carrega a configuração do arquivo (com cache em memória)
  * @returns {object} Configuração carregada
  */
 function loadConfig() {
+  if (configCache) return configCache;
+
   ensureConfigDir();
 
   if (!fs.existsSync(configPath)) {
@@ -56,10 +63,12 @@ function loadConfig() {
   try {
     const content = fs.readFileSync(configPath, "utf-8");
     const parsed = JSON.parse(content);
-    return validateConfig(parsed);
+    configCache = validateConfig(parsed);
+    return configCache;
   } catch (err) {
     console.error("Erro ao ler config.json:", err);
-    return { ...defaultConfig };
+    configCache = { ...defaultConfig };
+    return configCache;
   }
 }
 
@@ -75,6 +84,7 @@ function saveConfig(config) {
     JSON.stringify(validatedConfig, null, 2),
     "utf-8"
   );
+  configCache = validatedConfig; // Invalida/atualiza cache
 }
 
 module.exports = {

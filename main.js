@@ -3,6 +3,7 @@ const { autoUpdater } = require("electron-updater");
 const { hashPin } = require("./server/auth");
 const { loadConfig, saveConfig } = require("./server/config");
 const path = require("path");
+const http = require("http");
 
 // Ícone correto por plataforma (.ico para Windows, .png para Linux/macOS)
 const iconExt = process.platform === "win32" ? "ico" : "png";
@@ -109,7 +110,6 @@ function createTray() {
  * Dispara agendamento de shutdown via requisição local
  */
 function triggerShutdown(minutes) {
-  const http = require("http");
   const req = http.request({ hostname: "localhost", port: 3333, path: `/shutdown/${minutes}`, method: "POST" });
   req.on("error", (err) => console.error("Erro ao agendar pelo tray:", err));
   req.end();
@@ -119,7 +119,6 @@ function triggerShutdown(minutes) {
  * Cancela o agendamento via requisição local
  */
 function triggerCancel() {
-  const http = require("http");
   const req = http.request({ hostname: "localhost", port: 3333, path: "/cancel", method: "POST" });
   req.on("error", (err) => console.error("Erro ao cancelar pelo tray:", err));
   req.end();
@@ -172,8 +171,10 @@ function setupAutoUpdater() {
     sendUpdateEvent("error", { message: err.message });
   });
 
-  // Verificação automática ao iniciar
-  autoUpdater.checkForUpdates().catch(() => {});
+  // Verificação automática ao iniciar (com delay para não bloquear startup)
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch(() => {});
+  }, 3000);
 }
 
 // ============================================================================

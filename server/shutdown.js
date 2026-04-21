@@ -3,6 +3,8 @@ const { saveConfig } = require("./config");
 const { createOverlay, closeOverlay, sendRemaining } = require("../overlay/overlayWindow");
 const platform = require("./platform");
 
+const EXEC_TIMEOUT = 5000; // 5 segundos
+
 // ============================================================================
 // STATE
 // ============================================================================
@@ -21,7 +23,9 @@ function scheduleShutdown(timestamp, config) {
   }
   
   // Tenta cancelar algum desligamento do SO pendente
-  exec(platform.cancelSystemShutdown(), () => {}); // Ignora erros se não houver desligamento pendente
+  exec(platform.cancelSystemShutdown(), { timeout: EXEC_TIMEOUT }, (err) => {
+    if (err && err.killed) console.warn("Comando de cancelamento de shutdown timeout");
+  });
 
   const delay = timestamp - Date.now();
   if (delay <= 0) return;
@@ -63,7 +67,9 @@ function cancelShutdown(config) {
   closeOverlay();
   config.scheduledAt = null;
   saveConfig(config);
-  exec(platform.cancelSystemShutdown());
+  exec(platform.cancelSystemShutdown(), { timeout: EXEC_TIMEOUT }, (err) => {
+    if (err && err.killed) console.warn("Comando de cancelamento de shutdown timeout");
+  });
 }
 
 module.exports = {

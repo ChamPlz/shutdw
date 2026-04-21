@@ -6,6 +6,8 @@ const { scheduleShutdown, cancelShutdown } = require("./shutdown");
 const { exec } = require("child_process");
 const platform = require("./platform");
 
+const EXEC_TIMEOUT = 5000; // 5 segundos
+
 const PORT = 3333;
 
 /**
@@ -142,7 +144,9 @@ function createRoutes(config) {
   // ==========================================================================
 
   router.post("/shutdown", (req, res) => {
-    exec(platform.shutdownWithDelay(15));
+    exec(platform.shutdownWithDelay(15), { timeout: EXEC_TIMEOUT }, (err) => {
+      if (err && err.killed) console.error("Comando de shutdown timeout");
+    });
     res.json({ status: "Desligando agora" });
   });
 
