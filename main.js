@@ -36,14 +36,6 @@ function restoreWindow() {
   win.show();
   win.setSkipTaskbar(false); // garante que está visível antes do toggle
   win.focus();
-
-  // Delay maior para o Windows ter tempo de processar o ícone
-  setTimeout(() => {
-    win.setSkipTaskbar(true);
-    setTimeout(() => {
-      win.setSkipTaskbar(false);
-    }, 150); // <-- era tudo em 10ms, agora é escalonado
-  }, 100);
 }
 
 // ============================================================================
@@ -110,7 +102,7 @@ function createTray() {
   ]);
 
   tray.setContextMenu(contextMenu);
-  tray.on("double-click", () => restoreWindow());
+  tray.on("click", () => restoreWindow());
 }
 
 /**
