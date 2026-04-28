@@ -87,18 +87,24 @@ function updateTimer(timerEl, containerEl, remaining) {
 function startStatusPolling(baseUrl, timerEl, containerEl) {
   let intervalId = null;
   let hasActiveShutdown = false;
+  let currentIntervalMs = 1000;
 
   function poll() {
     apiRequest(baseUrl, "/status")
       .then(data => {
         updateTimer(timerEl, containerEl, data.remaining);
-        // Se não há shutdown ativo, reduz frequência para 5s
-        if (data.remaining == null && hasActiveShutdown) {
-          hasActiveShutdown = false;
-          clearInterval(intervalId);
-          intervalId = setInterval(poll, 5000);
-        } else if (data.remaining != null) {
+        const shouldBeFast = data.remaining != null;
+        
+        if (shouldBeFast && currentIntervalMs !== 1000) {
           hasActiveShutdown = true;
+          currentIntervalMs = 1000;
+          if (intervalId) clearInterval(intervalId);
+          intervalId = setInterval(poll, 1000);
+        } else if (!shouldBeFast && currentIntervalMs !== 5000) {
+          hasActiveShutdown = false;
+          currentIntervalMs = 5000;
+          if (intervalId) clearInterval(intervalId);
+          intervalId = setInterval(poll, 5000);
         }
       })
       .catch(() => {
@@ -109,10 +115,8 @@ function startStatusPolling(baseUrl, timerEl, containerEl) {
       });
   }
 
-  // Inicia polling rápido (1s)
   intervalId = setInterval(poll, 1000);
 
-  // Retorna função de cleanup
   return () => {
     if (intervalId) clearInterval(intervalId);
   };
