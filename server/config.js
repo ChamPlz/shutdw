@@ -74,7 +74,7 @@ function loadConfig() {
 
   if (!fs.existsSync(configPath)) {
     saveConfig(defaultConfig);
-    return { ...defaultConfig };
+    return configCache;
   }
 
   try {
