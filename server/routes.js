@@ -6,8 +6,6 @@ const { scheduleShutdown, cancelShutdown } = require("./shutdown");
 const { exec } = require("child_process");
 const platform = require("./platform");
 
-const EXEC_TIMEOUT = 5000; // 5 segundos
-
 const PORT = 3333;
 
 /**
@@ -129,6 +127,16 @@ function createRoutes(config) {
     res.json({ status: "Preferência de IPv6 atualizada", useIPv6 });
   });
 
+  router.post('/config/exec-timeout', (req, res) => {
+    const { execTimeout } = req.body;
+    if (typeof execTimeout !== 'number' || execTimeout <= 0) {
+      return res.status(400).json({ error: "Timeout deve ser um número positivo" });
+    }
+    config.execTimeout = execTimeout;
+    saveConfig(config);
+    res.json({ status: "Timeout de execução atualizado", execTimeout });
+  });
+
   router.post("/config/pin", async (req, res) => {
     const { newPin } = req.body;
     if (!newPin || typeof newPin !== 'string' || newPin.length < 4) {
@@ -149,7 +157,7 @@ function createRoutes(config) {
   // ==========================================================================
 
   router.post("/shutdown", (req, res) => {
-    exec(platform.shutdownWithDelay(15), { timeout: EXEC_TIMEOUT }, (err) => {
+    exec(platform.shutdownWithDelay(15), { timeout: config.execTimeout }, (err) => {
       if (err && err.killed) console.error("Comando de shutdown timeout");
       if (err && !err.killed) console.error("Erro ao executar shutdown:", err);
     });
