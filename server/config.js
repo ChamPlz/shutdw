@@ -17,7 +17,7 @@ const defaultConfig = {
   scheduledAt: null,
   autoStart: false,
   useIPv6: false,
-  execTimeout: 5000,
+  execTimeout: process.env.EXEC_TIMEOUT ? parseInt(process.env.EXEC_TIMEOUT, 10) : 5000,
 };
 
 /**

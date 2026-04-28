@@ -57,6 +57,26 @@ O próprio app exibe:
 
 ---
 
+## ⚙️ Configuração
+
+### Variáveis de Ambiente
+
+Você pode configurar o timeout de execução via variável de ambiente:
+
+```bash
+EXEC_TIMEOUT=10000 npm run dev
+```
+
+- `EXEC_TIMEOUT`: Timeout em milissegundos para comandos de sistema (padrão: 5000ms)
+
+Também é possível configurar via API:
+```bash
+POST /config/exec-timeout
+{ "execTimeout": 10000 }
+```
+
+---
+
 ## 🛠️ Rodando em modo desenvolvimento
 
 ### Pré-requisitos
