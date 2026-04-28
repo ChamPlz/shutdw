@@ -164,7 +164,28 @@ function createRoutes(config) {
 
   router.post("/schedule", (req, res) => {
     const { time } = req.body;
-    const [h, m] = time.split(":").map(Number);
+    
+    if (!time || typeof time !== 'string') {
+      return res.status(400).json({ error: "Horário é obrigatório" });
+    }
+    
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
+    const match = time.match(timeRegex);
+    
+    if (!match) {
+      return res.status(400).json({ error: "Formato de horário inválido. Use HH:MM" });
+    }
+    
+    const h = Number(match[1]);
+    const m = Number(match[2]);
+    
+    if (h < 0 || h > 23) {
+      return res.status(400).json({ error: "Hora deve estar entre 00 e 23" });
+    }
+    
+    if (m < 0 || m > 59) {
+      return res.status(400).json({ error: "Minutos devem estar entre 00 e 59" });
+    }
 
     const date = new Date();
     date.setHours(h, m, 0, 0);
