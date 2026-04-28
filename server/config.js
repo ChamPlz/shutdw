@@ -17,6 +17,7 @@ const defaultConfig = {
   scheduledAt: null,
   autoStart: false,
   useIPv6: false,
+  execTimeout: 5000,
 };
 
 /**
@@ -60,6 +61,7 @@ function validateConfig(config) {
     scheduledAt: config.scheduledAt ?? null,
     autoStart: Boolean(config.autoStart),
     useIPv6: Boolean(config.useIPv6),
+    execTimeout: typeof config.execTimeout === 'number' ? config.execTimeout : 5000,
   };
 }
 

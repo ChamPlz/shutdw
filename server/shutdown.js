@@ -3,17 +3,15 @@ const { saveConfig } = require("./config");
 const { createOverlay, closeOverlay, sendRemaining } = require("../overlay/overlayWindow");
 const platform = require("./platform");
 
-const EXEC_TIMEOUT = 5000; // 5 segundos
-
 // ============================================================================
 // STATE
 // ============================================================================
 let shutdownTimer = null;
 let shutdownVersion = 0;
 
-function cancelSystemShutdown() {
+function cancelSystemShutdown(config) {
   return new Promise((resolve) => {
-    exec(platform.cancelSystemShutdown(), { timeout: EXEC_TIMEOUT }, (err) => {
+    exec(platform.cancelSystemShutdown(), { timeout: config.execTimeout }, (err) => {
       if (err && err.killed) console.warn("Comando de cancelamento de shutdown timeout");
       resolve();
     });
@@ -34,7 +32,7 @@ async function scheduleShutdown(timestamp, config) {
     shutdownTimer = null;
   }
 
-  await cancelSystemShutdown();
+  await cancelSystemShutdown(config);
 
   if (currentVersion !== shutdownVersion) return;
 
@@ -93,7 +91,7 @@ async function cancelShutdown(config) {
   closeOverlay();
   config.scheduledAt = null;
   saveConfig(config);
-  await cancelSystemShutdown();
+  await cancelSystemShutdown(config);
 
   if (currentVersion !== shutdownVersion) return;
 }
