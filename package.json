@@ -33,6 +33,9 @@
     "electron": "^39.8.5",
     "electron-builder": "^26.8.1"
   },
+  "overrides": {
+    "path-to-regexp": "0.1.13"
+  },
   "build": {
     "appId": "com.carlos.shutdw",
     "productName": "ShutDW",
