@@ -132,7 +132,7 @@ function triggerCancel() {
  * Envia evento de atualização para o renderer
  */
 function sendUpdateEvent(event, data = {}) {
-  if (win && !win.isDestroyed()) {
+  if (win && !win.isDestroyed() && win.webContents && !win.webContents.isDestroyed()) {
     win.webContents.send("update-event", { event, ...data });
   }
 }
