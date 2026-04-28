@@ -22,23 +22,24 @@ app.use(express.static(path.join(__dirname, "../web")));
 app.use(express.static(path.join(__dirname, "../shared")));
 
 // Rate limits diferenciados por tipo de operação
+// Limites mais generosos para melhor UX (app local com proteção por PIN)
 const readLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 120,
+  limit: 300,
   message: { error: "Muitas requisições, tente novamente em breve." },
   statusCode: 429,
 });
 
 const actionLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 20,
+  limit: 60,
   message: { error: "Muitas ações, aguarde antes de tentar novamente." },
   statusCode: 429,
 });
 
 const authLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 5,
+  limit: 10,
   message: { error: "Muitas tentativas de autenticação. Tente novamente em 1 minuto." },
   statusCode: 429,
 });
