@@ -7,6 +7,7 @@ const { app } = require("electron");
  */
 const configDir = path.join(app.getPath("userData"), "config");
 const configPath = path.join(configDir, "config.json");
+let fsWatcher = null;
 
 /**
  * Configuração padrão
@@ -29,6 +30,22 @@ let configCache = null;
 function ensureConfigDir() {
   if (!fs.existsSync(configDir)) {
     fs.mkdirSync(configDir, { recursive: true });
+  }
+}
+
+/**
+ * Configura watcher para invalidar cache quando arquivo mudar
+ */
+function setupConfigWatcher() {
+  if (fsWatcher) return;
+  try {
+    fsWatcher = fs.watch(configPath, (eventType) => {
+      if (eventType === "change") {
+        configCache = null;
+      }
+    });
+  } catch (err) {
+    console.warn("Não foi possível criar watcher do config:", err);
   }
 }
 
@@ -92,4 +109,5 @@ module.exports = {
   saveConfig,
   defaultConfig,
   configPath,
+  setupConfigWatcher,
 };

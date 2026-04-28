@@ -66,7 +66,11 @@ function sendRemaining(seconds) {
 // ============================================================================
 
 ipcMain.on("overlay:cancel", () => {
-  process.emit("cancel-shutdown");
+  if (process.listenerCount("cancel-shutdown") > 0) {
+    process.emit("cancel-shutdown");
+  } else {
+    console.warn("Nenhum listener para cancel-shutdown");
+  }
 });
 
 ipcMain.on("overlay:close", () => {

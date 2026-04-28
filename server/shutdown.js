@@ -31,23 +31,31 @@ function scheduleShutdown(timestamp, config) {
   if (delay <= 0) return;
 
   createOverlay();
+  const overlayCreated = true;
 
   // Envia o tempo imediatamente para não ter delay visual
   const initialRemaining = Math.max(0, Math.floor((timestamp - Date.now()) / 1000));
   sendRemaining(initialRemaining);
 
   shutdownTimer = setInterval(() => {
-    const remaining = Math.max(0, Math.floor((timestamp - Date.now()) / 1000));
-    sendRemaining(remaining);
-
+    const remaining = Math.floor((timestamp - Date.now()) / 1000);
+    
     if (remaining <= 0) {
       clearInterval(shutdownTimer);
       shutdownTimer = null;
       closeOverlay();
-      config.scheduledAt = null;
-      saveConfig(config);
-      exec(platform.shutdownNow());
+      exec(platform.shutdownNow(), (err) => {
+        if (err) {
+          console.error("Falha ao executar shutdown:", err);
+          return;
+        }
+        config.scheduledAt = null;
+        saveConfig(config);
+      });
+      return;
     }
+    
+    sendRemaining(remaining);
   }, 1000);
 
   config.scheduledAt = timestamp;

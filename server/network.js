@@ -21,25 +21,36 @@ function getOutboundAddress(family, target, timeout = 1000) {
   return new Promise((resolve) => {
     try {
       const socket = dgram.createSocket(family);
+      let resolved = false;
       const timer = setTimeout(() => {
-        socket.close();
-        resolve(null);
+        if (!resolved) {
+          resolved = true;
+          socket.close();
+          resolve(null);
+        }
       }, timeout);
 
       socket.connect(53, target, () => {
-        clearTimeout(timer);
-        try {
-          resolve(socket.address().address || null);
-        } catch {
-          resolve(null);
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          try {
+            const addr = socket.address().address || null;
+            resolve(addr);
+          } catch {
+            resolve(null);
+          }
+          socket.close();
         }
-        socket.close();
       });
 
       socket.on("error", () => {
-        clearTimeout(timer);
-        socket.close();
-        resolve(null);
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timer);
+          socket.close();
+          resolve(null);
+        }
       });
     } catch {
       resolve(null);

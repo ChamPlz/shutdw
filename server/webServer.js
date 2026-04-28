@@ -2,7 +2,7 @@ const express = require("express");
 const { rateLimit } = require("express-rate-limit");
 const path = require("path");
 
-const { loadConfig } = require("./config");
+const { loadConfig, setupConfigWatcher } = require("./config");
 const { cancelShutdown } = require("./shutdown");
 const { createRoutes, PORT } = require("./routes");
 
@@ -10,6 +10,7 @@ const { createRoutes, PORT } = require("./routes");
 // CONFIG & STATE
 // ============================================================================
 const config = loadConfig();
+setupConfigWatcher();
 
 // ============================================================================
 // EXPRESS SETUP

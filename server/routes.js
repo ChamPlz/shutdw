@@ -45,24 +45,22 @@ function createRoutes(config) {
   // ==========================================================================
   // MIDDLEWARE — Autenticação por PIN
   // ==========================================================================
+  const publicRoutes = ['/config/pin', '/config/ipv6-available'];
+  
   router.use(async (req, res, next) => {
-    if (req.method === "GET") return next();
-
     const provided = (req.headers["x-pin"] || "").toString();
     const stored = config.pin;
 
-    // Sem PIN configurado: permite apenas criar o primeiro
+    // Rotas públicas sempre acessíveis
+    if (publicRoutes.includes(req.path)) return next();
+
+    // Sem PIN configurado: bloqueia tudo exceto criação do primeiro PIN
     if (!stored) {
       if (req.method === 'POST' && req.path === '/config/pin') return next();
       return res.status(401).json({ error: "PIN não configurado." });
     }
 
     try {
-      // Localhost liberado (exceto /shutdown)
-      if ((req.ip === '::1' || req.ip === '127.0.0.1') && req.path !== '/shutdown') {
-        return next();
-      }
-
       // Verificação com hash Argon2
       if (auth.isHash(stored)) {
         const ok = await auth.verifyPin(stored, provided);
@@ -86,7 +84,14 @@ function createRoutes(config) {
 
   router.get("/status", (req, res) => {
     if (!config.scheduledAt) return res.json({ remaining: null });
-    const remaining = Math.max(0, Math.floor((config.scheduledAt - Date.now()) / 1000));
+    const remaining = Math.floor((config.scheduledAt - Date.now()) / 1000);
+    
+    if (remaining <= 0) {
+      config.scheduledAt = null;
+      saveConfig(config);
+      return res.json({ remaining: 0 });
+    }
+    
     res.json({ remaining });
   });
 
@@ -146,6 +151,7 @@ function createRoutes(config) {
   router.post("/shutdown", (req, res) => {
     exec(platform.shutdownWithDelay(15), { timeout: EXEC_TIMEOUT }, (err) => {
       if (err && err.killed) console.error("Comando de shutdown timeout");
+      if (err && !err.killed) console.error("Erro ao executar shutdown:", err);
     });
     res.json({ status: "Desligando agora" });
   });
