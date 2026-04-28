@@ -183,8 +183,14 @@ function setupAutoUpdater() {
 function setupIpcHandlers() {
   ipcMain.handle("reset-pin", async (_event, newPin) => {
     try {
-      if (typeof newPin !== "string" || newPin.length < 4) {
-        return { error: "PIN inválido: mínimo 4 caracteres" };
+      if (typeof newPin !== "string") {
+        return { error: "PIN inválido", code: "INVALID_TYPE", details: "PIN deve ser uma string" };
+      }
+      if (newPin.length < 4) {
+        return { error: "PIN inválido", code: "PIN_TOO_SHORT", details: "Mínimo 4 caracteres" };
+      }
+      if (newPin.length > 12) {
+        return { error: "PIN inválido", code: "PIN_TOO_LONG", details: "Máximo 12 caracteres" };
       }
       const hash = await hashPin(newPin);
       const cfg = loadConfig();
@@ -193,7 +199,11 @@ function setupIpcHandlers() {
       return { status: "PIN redefinido com sucesso" };
     } catch (err) {
       console.error("Erro ao redefinir PIN:", err);
-      return { error: "Erro ao redefinir PIN" };
+      return { 
+        error: "Erro interno ao redefinir PIN", 
+        code: "INTERNAL_ERROR",
+        details: err.message 
+      };
     }
   });
 

@@ -97,8 +97,16 @@ function handleCreateFirstPin() {
 
 async function resetPinDesktop() {
   const newPin = el.newPin?.value;
-  if (!newPin || newPin.length < 4) {
+  if (!newPin) {
+    showConfigStatus(el.configStatus, "Novo PIN é obrigatório", true);
+    return;
+  }
+  if (newPin.length < 4) {
     showConfigStatus(el.configStatus, "Novo PIN precisa ter ao menos 4 caracteres", true);
+    return;
+  }
+  if (newPin.length > 12) {
+    showConfigStatus(el.configStatus, "Novo PIN deve ter no máximo 12 caracteres", true);
     return;
   }
   if (!window.api?.resetPin) {
@@ -107,13 +115,16 @@ async function resetPinDesktop() {
   }
   try {
     const result = await window.api.resetPin(newPin);
-    showConfigStatus(el.configStatus, result.status || "PIN redefinido com sucesso", !!result.error);
-    if (!result.error) {
+    if (result.error) {
+      showConfigStatus(el.configStatus, `${result.error}: ${result.details || ''}`, true);
+    } else {
+      showConfigStatus(el.configStatus, result.status || "PIN redefinido com sucesso", false);
       if (el.currentPin) el.currentPin.value = "";
       if (el.newPin) el.newPin.value = "";
     }
-  } catch {
-    showConfigStatus(el.configStatus, "Erro ao redefinir PIN", true);
+  } catch (err) {
+    console.error("Erro inesperado ao redefinir PIN:", err);
+    showConfigStatus(el.configStatus, "Erro inesperado ao redefinir PIN", true);
   }
 }
 
