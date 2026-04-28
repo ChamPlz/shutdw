@@ -9,37 +9,52 @@ const EXEC_TIMEOUT = 5000; // 5 segundos
 // STATE
 // ============================================================================
 let shutdownTimer = null;
+let shutdownVersion = 0;
+
+function cancelSystemShutdown() {
+  return new Promise((resolve) => {
+    exec(platform.cancelSystemShutdown(), { timeout: EXEC_TIMEOUT }, (err) => {
+      if (err && err.killed) console.warn("Comando de cancelamento de shutdown timeout");
+      resolve();
+    });
+  });
+}
 
 /**
  * Agenda o desligamento do sistema
  * @param {number} timestamp - Timestamp (ms) para o desligamento
  * @param {object} config - Referência ao objeto de configuração
  */
-function scheduleShutdown(timestamp, config) {
-  // Limpa o timer atual se existir, mas NÃO fecha o overlay para reaproveitá-lo
+async function scheduleShutdown(timestamp, config) {
+  shutdownVersion += 1;
+  const currentVersion = shutdownVersion;
+
   if (shutdownTimer) {
     clearInterval(shutdownTimer);
     shutdownTimer = null;
   }
-  
-  // Tenta cancelar algum desligamento do SO pendente
-  exec(platform.cancelSystemShutdown(), { timeout: EXEC_TIMEOUT }, (err) => {
-    if (err && err.killed) console.warn("Comando de cancelamento de shutdown timeout");
-  });
+
+  await cancelSystemShutdown();
+
+  if (currentVersion !== shutdownVersion) return;
 
   const delay = timestamp - Date.now();
   if (delay <= 0) return;
 
   createOverlay();
-  const overlayCreated = true;
 
-  // Envia o tempo imediatamente para não ter delay visual
   const initialRemaining = Math.max(0, Math.floor((timestamp - Date.now()) / 1000));
   sendRemaining(initialRemaining);
 
   shutdownTimer = setInterval(() => {
+    if (currentVersion !== shutdownVersion) {
+      clearInterval(shutdownTimer);
+      shutdownTimer = null;
+      return;
+    }
+
     const remaining = Math.floor((timestamp - Date.now()) / 1000);
-    
+
     if (remaining <= 0) {
       clearInterval(shutdownTimer);
       shutdownTimer = null;
@@ -54,7 +69,7 @@ function scheduleShutdown(timestamp, config) {
       });
       return;
     }
-    
+
     sendRemaining(remaining);
   }, 1000);
 
@@ -66,7 +81,10 @@ function scheduleShutdown(timestamp, config) {
  * Cancela o desligamento agendado
  * @param {object} config - Referência ao objeto de configuração
  */
-function cancelShutdown(config) {
+async function cancelShutdown(config) {
+  shutdownVersion += 1;
+  const currentVersion = shutdownVersion;
+
   if (shutdownTimer) {
     clearInterval(shutdownTimer);
     shutdownTimer = null;
@@ -75,9 +93,9 @@ function cancelShutdown(config) {
   closeOverlay();
   config.scheduledAt = null;
   saveConfig(config);
-  exec(platform.cancelSystemShutdown(), { timeout: EXEC_TIMEOUT }, (err) => {
-    if (err && err.killed) console.warn("Comando de cancelamento de shutdown timeout");
-  });
+  await cancelSystemShutdown();
+
+  if (currentVersion !== shutdownVersion) return;
 }
 
 module.exports = {
