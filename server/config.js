@@ -16,6 +16,8 @@ const defaultConfig = {
   scheduledAt: null,
   autoStart: false,
   useIPv6: false,
+  telemetryEnabled: true,
+  analyticsClientId: null,
 };
 
 /**
@@ -43,6 +45,8 @@ function validateConfig(config) {
     scheduledAt: config.scheduledAt ?? null,
     autoStart: Boolean(config.autoStart),
     useIPv6: Boolean(config.useIPv6),
+    telemetryEnabled: config.telemetryEnabled !== false, // default true
+    analyticsClientId: config.analyticsClientId ?? null,
   };
 }
 
