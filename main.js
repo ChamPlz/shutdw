@@ -49,14 +49,19 @@ function restoreWindow() {
  */
 function showNotification(title, body) {
   if (!Notification.isSupported()) return;
-  const notif = new Notification(title, {
+
+  const notif = new Notification({
+    title,
     body,
     icon: appIcon,
     silent: false,
   });
+
   notif.on("click", () => {
     restoreWindow();
   });
+
+  notif.show();
 }
 
 // ============================================================================
@@ -313,4 +318,5 @@ app.whenReady().then(() => {
   createTray();
   setupIpcHandlers();
   setupAutoUpdater();
+  showNotification("ShutDW - Iniciado", "Aplicativo iniciado com sucesso.");
 });
