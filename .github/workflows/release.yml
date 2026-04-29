@@ -60,12 +60,14 @@ jobs:
         if: matrix.platform == 'windows'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npx electron-builder --windows --${{ matrix.arch }} --publish always
 
       - name: Build and Publish (Linux)
         if: matrix.platform == 'linux'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npx electron-builder --linux --${{ matrix.arch }} --publish always
 
       - name: Build and Publish (macOS)
@@ -73,6 +75,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY: '-'
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: npx electron-builder --mac --${{ matrix.arch }} --publish always
 
       # ── Upload artifacts ──
