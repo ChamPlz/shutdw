@@ -55,21 +55,6 @@ jobs:
           echo "Node version: $(node --version)"
           echo "NPM version: $(npm --version)"
 
-      # ── Inject Sentry DSN ──
-      - name: Inject Sentry DSN (Linux/macOS)
-        if: matrix.platform != 'windows'
-        run: sed -i '' 's|__SENTRY_DSN__|${{ secrets.SENTRY_DSN }}|g' main.js
-        # Linux não aceita sed -i '' (sem backup), só sed -i
-      - name: Inject Sentry DSN (Linux)
-        if: matrix.platform == 'linux'
-        run: sed -i 's|__SENTRY_DSN__|${{ secrets.SENTRY_DSN }}|g' main.js
-
-      - name: Inject Sentry DSN (Windows)
-        if: matrix.platform == 'windows'
-        shell: pwsh
-        run: |
-          (Get-Content main.js) -replace '__SENTRY_DSN__', '${{ secrets.SENTRY_DSN }}' | Set-Content main.js
-
       # ── Build per platform ──
       - name: Build and Publish (Windows)
         if: matrix.platform == 'windows'
