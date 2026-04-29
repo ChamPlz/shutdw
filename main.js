@@ -2,8 +2,12 @@ const { app, BrowserWindow, Tray, Menu, dialog, ipcMain, shell } = require("elec
 const { autoUpdater } = require("electron-updater");
 const { hashPin } = require("./server/auth");
 const { loadConfig, saveConfig } = require("./server/config");
+const { initTelemetry, trackEvent } = require("./server/telemetry");
 const path = require("path");
 const http = require("http");
+
+// Inicializar telemetria Sentry (se habilitada e DSN configurado)
+initTelemetry();
 
 // Ícone correto por plataforma (.ico para Windows, .png para Linux/macOS)
 const iconExt = process.platform === "win32" ? "ico" : "png";
@@ -215,6 +219,18 @@ function setupIpcHandlers() {
     return app.getLoginItemSettings().openAtLogin;
   });
 
+  ipcMain.handle("set-telemetry", (_event, enable) => {
+    if (typeof enable !== "boolean") return;
+    const cfg = loadConfig();
+    cfg.telemetryEnabled = enable;
+    saveConfig(cfg);
+  });
+
+  ipcMain.handle("check-telemetry", () => {
+    const cfg = loadConfig();
+    return cfg.telemetryEnabled !== false;
+  });
+
   ipcMain.handle("open-external", async (_event, url) => {
     try {
       await shell.openExternal(url);
@@ -264,6 +280,7 @@ if (!gotTheLock) {
 // APP START
 // ============================================================================
 app.whenReady().then(() => {
+  trackEvent("app_started");
   require("./server/webServer");
   Menu.setApplicationMenu(null);
   createWindow();
