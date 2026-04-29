@@ -1,3 +1,19 @@
+# 1.1.4
+## Change Log
+### Version v1.1.4 - 2026-04-28
+
+#### Added
+- Sistema de telemetria anônima com Sentry para monitoramento de crashes e eventos.
+- Controle de telemetria (opt-in/opt-out) via interface web com toggle switch.
+- Arquivo `.env.example` com template para configuração local.
+- Novo módulo `server/telemetry.js` para inicialização e tracking de eventos.
+
+#### Changed
+- README traduzido para inglês com novo banner e melhor formatação visual.
+- Configuração (`config.js`) agora suporta `telemetryEnabled` e `analyticsClientId`.
+
+---
+
 # 1.1.3
 ## Change Log
 ### Version v1.1.3 - 2026-04-21
