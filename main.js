@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, dialog, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, Tray, Menu, dialog, ipcMain, shell, Notification } = require("electron");
 const { autoUpdater } = require("electron-updater");
 const { hashPin } = require("./server/auth");
 const { loadConfig, saveConfig } = require("./server/config");
@@ -41,6 +41,21 @@ function restoreWindow() {
   win.show();
   win.setSkipTaskbar(false); // garante que está visível antes do toggle
   win.focus();
+}
+
+/**
+ * Exibe uma notificação nativa do sistema
+ */
+function showNotification(title, body) {
+  if (!Notification.isSupported()) return;
+  const notif = new Notification(title, {
+    body,
+    icon: appIcon,
+    silent: false,
+  });
+  notif.on("click", () => {
+    restoreWindow();
+  });
 }
 
 // ============================================================================
@@ -156,6 +171,11 @@ function setupAutoUpdater() {
 
   autoUpdater.on("update-available", (info) => {
     sendUpdateEvent("available", { version: info.version });
+    trackEvent("update_available", { version: info.version });
+    showNotification(
+      "ShutDW - Atualização Disponível",
+      `Nova versão ${info.version} encontrada! Baixando...`
+    );
   });
 
   autoUpdater.on("update-not-available", (info) => {
@@ -168,6 +188,11 @@ function setupAutoUpdater() {
 
   autoUpdater.on("update-downloaded", (info) => {
     sendUpdateEvent("downloaded", { version: info.version });
+    trackEvent("update_downloaded", { version: info.version });
+    showNotification(
+      "ShutDW - Atualização Pronta",
+      `Versão ${info.version} baixada! Clique aqui para instalar.`
+    );
   });
 
   autoUpdater.on("error", (err) => {
