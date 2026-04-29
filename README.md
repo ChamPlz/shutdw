@@ -1,138 +1,157 @@
+<p align="center">
+  <img src="./build/assets/banner.png" alt="ShutDW Banner" width="100%" />
+</p>
 
-# ⚡ ShutDW
+<h1 align="center">⚡ ShutDW</h1>
 
-Um aplicativo moderno para **desligar o computador remotamente**, **agendar desligamentos** e **controlar tudo pelo celular** através de uma interface web simples e segura.
+<p align="center">
+  A modern desktop app to remotely shut down your computer, schedule power actions, and control everything from your phone.
+</p>
 
-> Ideal para quem deixa o PC ligado, pais que querem controlar horários ou simplesmente não querem levantar da cama 😄
+<p align="center">
+  <strong>Simple • Fast • Secure</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/stars/ChamPlz/shutdw?style=for-the-badge" />
+  <img src="https://img.shields.io/github/license/ChamPlz/shutdw?style=for-the-badge" />
+  <img src="https://img.shields.io/github/issues/ChamPlz/shutdw?style=for-the-badge" />
+  <img src="https://img.shields.io/github/last-commit/ChamPlz/shutdw?style=for-the-badge" />
+</p>
 
 ---
 
-## ✨ Funcionalidades
+## ✨ Features
 
-- 🖥️ **App Desktop (Windows)** feito com Electron  
-- 🌐 **Interface Web** acessível pelo navegador (PC ou celular)
-- 📱 Controle remoto via celular na mesma rede
-- ⏳ Contador regressivo de desligamento
-- ⏰ Agendamento por tempo (10, 30, 60 minutos)
-- 🕒 Agendamento por horário exato
-- ❌ Cancelamento de desligamento
-- 🔐 Proteção por PIN
-- 💾 Salvamento de configurações
-- 🧲 Minimizar para a bandeja do sistema (system tray)
-- 🎨 Interface moderna com tema roxo
+- 🖥️ **Desktop App (Windows)** built with Electron  
+- 🌐 **Web Interface** accessible from any browser (PC or mobile)  
+- 📱 Remote control from your phone (same network)  
+- ⏳ Shutdown countdown timer  
+- ⏰ Quick scheduling (10, 30, 60 minutes)  
+- 🕒 Schedule shutdown at a specific time  
+- ❌ Cancel scheduled shutdowns anytime  
+- 🔐 PIN-protected actions  
+- 💾 Persistent configuration  
+- 🧲 System tray support (runs in background)  
+- 🎨 Clean and modern UI  
 
 ---
 
 ## 📸 Screenshots
 
-
-<img src="https://imgur.com/UtWJMQv.png" alt="Descrição da Imagem" width="200">
-<img src="https://imgur.com/pL2vBkY.png" alt="Descrição da Imagem" width="233">
-<img src="https://imgur.com/x0Gdf4S.png" alt="Descrição da Imagem" width="200">
-
----
-
-## 🚀 Como usar
-
-### 1️⃣ Executável (recomendado)
-Baixe o instalador na aba **Releases** do GitHub e execute normalmente no Windows.
-
-Após abrir:
-- O app inicia em segundo plano
-- Um ícone aparece na bandeja do sistema
-- A interface web pode ser acessada pelo navegador
+<p align="center">
+  <img src="https://imgur.com/UtWJMQv.png" width="200"/>
+  <img src="https://imgur.com/pL2vBkY.png" width="230"/>
+  <img src="https://imgur.com/x0Gdf4S.png" width="200"/>
+</p>
 
 ---
 
-### 2️⃣ Acesso pelo celular
+## 🚀 Getting Started
 
-Com o app rodando, acesse no celular:
+### 1️⃣ Download (Recommended)
 
-http://localhost:3333
+Download the latest installer from the **Releases** section and run it on Windows.
 
+After launching:
 
-O próprio app exibe:
-- 📲 QR Code para acesso rápido
-- 🔗 Link com IP automático
+- The app runs in the background  
+- A tray icon will appear  
+- The web interface becomes accessible  
 
 ---
 
-## 🛠️ Rodando em modo desenvolvimento
+### 2️⃣ Access from Mobile
 
-### Pré-requisitos
+With the app running, open in your browser:
+
+<http://localhost:3333>
+
+The app also provides:
+
+- 📲 QR Code for quick access  
+- 🔗 Local network IP link  
+
+---
+
+## 🛠️ Development
+
+### Requirements
+
 - Node.js 18+
-- npm ou yarn
+- npm or yarn
 
-### Instalação
+### Installation
 
 ```bash
 git clone https://github.com/ChamPlz/shutdw.git
 cd shutdw
-npm install 
+npm install
 ```
-Rodar o APP
+
+### Run in development
+
 ```bash
 npm run dev
 ```
 
-Gerar executável
+### Build executable
+
 ```bash
 npm run build
 ```
 
-### 🧱 Tecnologias utilizadas
+---
 
-- Electron — aplicativo desktop
+## 🧱 Tech Stack
 
-- Node.js — backend
+- **Electron** — Desktop application  
+- **Node.js** — Runtime  
+- **Express** — Backend server  
+- **HTML / CSS / JavaScript** — Frontend  
+- **QRCode** — Mobile access  
 
-- Express — servidor web
+---
 
-- HTML / CSS / JavaScript — interface web
+## 🔐 Security
 
-- QRCode — acesso rápido pelo celular
+- PIN-protected actions  
+- Local network only (no external exposure)  
+- No dependency on third-party services  
 
-### 🔐 Segurança
+---
 
-- Ações protegidas por PIN
+## 📜 License
 
-- Comunicação restrita à rede local
+This project is open-source for **non-commercial use**.
 
-- Nenhuma dependência de serviços externos
+- ✅ Personal and educational use  
+- ❌ Commercial use requires a paid license  
 
-### 📜 Licença
+📧 Contact for commercial licensing:  
+**<carloscaldeira23@gmail.com>**
 
-Este projeto é código aberto para uso não-comercial.
+See the `LICENSE` file for more details.
 
-* ✅ Uso pessoal, educacional e não-comercial
+---
 
-* ❌ Uso comercial requer licença paga
+## 🤝 Contributing
 
-📧 Para licenciamento comercial:
-carloscaldeira23@gmail.com
+Contributions are welcome!
 
-Veja o arquivo LICENSE
- para mais detalhes.
+1. Fork the repository  
+2. Create a branch (`feature/your-feature`)  
+3. Commit your changes  
+4. Open a Pull Request 🚀  
 
-### 🤝 Contribuições
+---
 
-Contribuições são bem-vindas!
+## ⭐ Support
 
-* Fork o projeto
+If you like this project:
 
-* Crie uma branch (feature/minha-feature)
+- ⭐ Star the repository  
+- 📢 Share it with others  
+- 💬 Give feedback  
 
-* Faça commit
-
-* Abra um Pull Request 🚀
-
-### ⭐ Apoie o projeto
-
-Se este projeto te ajudou:
-
-Deixe uma ⭐ no repositório
-
-Compartilhe com amigos
-
-Use e dê feedback 😄
-
+---
