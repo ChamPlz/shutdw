@@ -305,6 +305,28 @@
               </div>
             </div>
           </div>
+          <div class="card card-full">
+            <div class="card-body">
+              <div class="config-form">
+                <div class="card-header">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M2 12h20"/>
+                  </svg>
+                  <h2>Telemetria Anônima</h2>
+                </div>
+                <p style="margin: 10px 0; font-size: 13px; color: #888;">
+                  Ajude a melhorar o ShutDW enviando relatórios anônimos de erros e uso.
+                  Usamos o Sentry para monitorar crashes e problemas de estabilidade,
+                  sem coletar informações pessoais ou conteúdo dos seus dados.
+                </p>
+                <div class="checkbox-wrapper-8">
+                  <input class="tgl tgl-skewed" id="telemetryToggle" type="checkbox"
+                    onchange="window.api.setTelemetry(this.checked)" />
+                  <label class="tgl-btn" data-tg-off="OFF" data-tg-on="ON" for="telemetryToggle"></label>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </main>

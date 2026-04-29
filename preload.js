@@ -32,4 +32,10 @@ contextBridge.exposeInMainWorld("api", {
   onUpdateEvent: (callback) => {
     ipcRenderer.on("update-event", (_event, data) => callback(data));
   },
+
+  /** Habilita ou desabilita telemetria anônima */
+  setTelemetry: (enable) => ipcRenderer.invoke("set-telemetry", enable),
+
+  /** Verifica se telemetria está habilitada */
+  checkTelemetry: () => ipcRenderer.invoke("check-telemetry"),
 });
