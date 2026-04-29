@@ -10,7 +10,7 @@ let isInitialized = false;
  */
 function initTelemetry() {
   const cfg = loadConfig();
-  const dsn = process.env.SENTRY_DSN;
+  const dsn = "__SENTRY_DSN__"; // Substituído em tempo de build pelo valor real do .env
 
   // Não inicializa se não houver DSN ou usuário desabilitou
   if (!dsn || cfg.telemetryEnabled === false) {

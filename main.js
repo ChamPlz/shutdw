@@ -318,5 +318,4 @@ app.whenReady().then(() => {
   createTray();
   setupIpcHandlers();
   setupAutoUpdater();
-  showNotification("ShutDW - Iniciado", "Aplicativo iniciado com sucesso.");
 });
