@@ -34,12 +34,13 @@ let allowQuit = false;
 function restoreWindow() {
   if (!win) return;
 
+  win.setSkipTaskbar(false);
+
   if (win.isMinimized()) {
     win.restore();
   }
 
   win.show();
-  win.setSkipTaskbar(false); // garante que está visível antes do toggle
   win.focus();
 }
 
