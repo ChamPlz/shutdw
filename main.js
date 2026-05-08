@@ -2,12 +2,8 @@ const { app, BrowserWindow, Tray, Menu, dialog, ipcMain, shell, Notification } =
 const { autoUpdater } = require("electron-updater");
 const { hashPin } = require("./server/auth");
 const { loadConfig, saveConfig } = require("./server/config");
-const { initTelemetry, trackEvent } = require("./server/telemetry");
 const path = require("path");
 const http = require("http");
-
-// Inicializar telemetria Sentry (se habilitada e DSN configurado)
-initTelemetry();
 
 // Ícone correto por plataforma (.ico para Windows, .png para Linux/macOS)
 const iconExt = process.platform === "win32" ? "ico" : "png";
@@ -177,7 +173,6 @@ function setupAutoUpdater() {
 
   autoUpdater.on("update-available", (info) => {
     sendUpdateEvent("available", { version: info.version });
-    trackEvent("update_available", { version: info.version });
     showNotification(
       "ShutDW - Atualização Disponível",
       `Nova versão ${info.version} encontrada! Baixando...`
@@ -194,7 +189,6 @@ function setupAutoUpdater() {
 
   autoUpdater.on("update-downloaded", (info) => {
     sendUpdateEvent("downloaded", { version: info.version });
-    trackEvent("update_downloaded", { version: info.version });
     showNotification(
       "ShutDW - Atualização Pronta",
       `Versão ${info.version} baixada! Clique aqui para instalar.`
@@ -250,25 +244,22 @@ function setupIpcHandlers() {
     return app.getLoginItemSettings().openAtLogin;
   });
 
-  ipcMain.handle("set-telemetry", (_event, enable) => {
-    if (typeof enable !== "boolean") return;
-    const cfg = loadConfig();
-    cfg.telemetryEnabled = enable;
-    saveConfig(cfg);
-  });
-
-  ipcMain.handle("check-telemetry", () => {
-    const cfg = loadConfig();
-    return cfg.telemetryEnabled !== false;
-  });
-
   ipcMain.handle("open-external", async (_event, url) => {
     try {
-      await shell.openExternal(url);
+      if (typeof url !== "string") {
+        return { error: "URL inválida" };
+      }
+
+      const parsedUrl = new URL(url);
+      if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+        return { error: "Protocolo não permitido" };
+      }
+
+      await shell.openExternal(parsedUrl.toString());
       return { success: true };
     } catch (err) {
       console.error("Erro ao abrir link externo:", err);
-      return { error: err.message };
+      return { error: "URL inválida" };
     }
   });
 
@@ -311,7 +302,6 @@ if (!gotTheLock) {
 // APP START
 // ============================================================================
 app.whenReady().then(() => {
-  trackEvent("app_started");
   require("./server/webServer");
   Menu.setApplicationMenu(null);
   createWindow();

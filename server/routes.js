@@ -5,7 +5,6 @@ const { getOutboundIp, getOutboundIpv6, hasIPv6Available, isIPv6 } = require("./
 const { scheduleShutdown, cancelShutdown } = require("./shutdown");
 const { exec } = require("child_process");
 const platform = require("./platform");
-const { trackEvent } = require("./telemetry");
 
 const EXEC_TIMEOUT = 5000; // 5 segundos
 
@@ -145,7 +144,6 @@ function createRoutes(config) {
   // ==========================================================================
 
   router.post("/shutdown", (req, res) => {
-    trackEvent("shutdown_executed", { method: "web_api", via: "now" });
     exec(platform.shutdownWithDelay(15), { timeout: EXEC_TIMEOUT }, (err) => {
       if (err && err.killed) console.error("Comando de shutdown timeout");
     });
@@ -154,7 +152,6 @@ function createRoutes(config) {
 
   router.post("/shutdown/:minutes", (req, res) => {
     const minutes = Number(req.params.minutes);
-    trackEvent("shutdown_scheduled", { method: "web_api", via: "minutes", minutes });
     scheduleShutdown(Date.now() + minutes * 60000, config);
     res.json({ status: `Desligamento em ${minutes} minutos` });
   });
@@ -167,13 +164,11 @@ function createRoutes(config) {
     date.setHours(h, m, 0, 0);
     if (date < new Date()) date.setDate(date.getDate() + 1);
 
-    trackEvent("shutdown_scheduled", { method: "web_api", via: "specific_time" });
     scheduleShutdown(date.getTime(), config);
     res.json({ status: `Desligamento agendado para ${time}` });
   });
 
   router.post("/cancel", (req, res) => {
-    trackEvent("shutdown_canceled", { method: "web_api" });
     cancelShutdown(config);
     res.json({ status: "Agendamento cancelado" });
   });

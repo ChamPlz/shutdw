@@ -25,7 +25,6 @@ function init() {
   cacheElements();
   setupAutoStart();
   setupIPv6Settings();
-  setupTelemetry();
   setupAbout();
   loadQRCode(API_URL, el.qr, el.link, (url) => window.api?.openExternal(url));
   checkPinConfigured();
@@ -50,7 +49,6 @@ function cacheElements() {
   el.ipv6Toggle = $("ipv6Toggle");
   el.ipv6ToggleContainer = $("ipv6ToggleContainer");
   el.ipv6StatusText = $("ipv6StatusText");
-  el.telemetryToggle = $("telemetryToggle");
   el.qrLocalBtn = $("qrLocalBtn");
   el.qrRemotoBtn = $("qrRemotoBtn");
   el.qrLocalContent = $("qrLocalContent");
@@ -160,16 +158,6 @@ function checkPinConfigured() {
 function setupAutoStart() {
   window.api?.checkAutoStart().then(isEnabled => {
     const checkbox = document.getElementById("cb3-8");
-    if (checkbox) checkbox.checked = isEnabled;
-  });
-}
-
-// ============================================================================
-// TELEMETRY
-// ============================================================================
-function setupTelemetry() {
-  window.api?.checkTelemetry().then(isEnabled => {
-    const checkbox = document.getElementById("telemetryToggle");
     if (checkbox) checkbox.checked = isEnabled;
   });
 }
