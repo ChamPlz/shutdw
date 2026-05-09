@@ -59,6 +59,13 @@ function createOverlay() {
  */
 function closeOverlay() {
   if (overlayWindow) {
+    // Cancela timer se ativo
+    if (overlayTimer) {
+      clearInterval(overlayTimer);
+      overlayTimer = null;
+    }
+    // Remove listeners IPC para evitar memory leak
+    overlayWindow.webContents.removeAllListeners("overlay:update");
     overlayWindow.close();
     overlayWindow = null;
   }
@@ -78,6 +85,13 @@ function sendRemaining(seconds) {
 // IPC HANDLERS
 // ============================================================================
 
+// Cleanup listeners when overlay is destroyed
+function cleanupIpcListeners() {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.webContents.removeAllListeners("overlay:update");
+  }
+}
+
 ipcMain.on("overlay:cancel", () => {
   process.emit("cancel-shutdown");
 });
@@ -85,6 +99,21 @@ ipcMain.on("overlay:cancel", () => {
 ipcMain.on("overlay:close", () => {
   closeOverlay();
 });
+
+// Ensure cleanup on app exit
+app.on("before-quit", () => {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.close();
+    cleanupIpcListeners();
+  }
+});
+
+module.exports = {
+  createOverlay,
+  closeOverlay,
+  sendRemaining,
+  cleanupIpcListeners,
+};
 
 module.exports = {
   createOverlay,
