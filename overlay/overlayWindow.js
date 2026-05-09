@@ -1,4 +1,4 @@
-const { BrowserWindow, ipcMain } = require("electron");
+const { BrowserWindow, ipcMain, app } = require("electron");
 const path = require("path");
 
 /**
@@ -113,10 +113,4 @@ module.exports = {
   closeOverlay,
   sendRemaining,
   cleanupIpcListeners,
-};
-
-module.exports = {
-  createOverlay,
-  closeOverlay,
-  sendRemaining,
 };

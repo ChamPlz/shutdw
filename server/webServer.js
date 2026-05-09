@@ -24,6 +24,8 @@ const logger = createLogger("server");
 // CONFIG & STATE
 // ============================================================================
 const config = loadConfig();
+// Referência ao http.Server para graceful shutdown
+let server = null;
 
 // ============================================================================
 // EXPRESS SETUP
@@ -178,7 +180,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Erro interno do servidor" });
 });
 
-app.listen(PORT, () => {
+server = app.listen(PORT, () => {
   logger.info("Servidor web iniciado", { port: PORT, url: `http://localhost:${PORT}` });
 });
 
@@ -186,78 +188,82 @@ app.listen(PORT, () => {
  * Graceful shutdown — para o servidor sem perder conexões ativas
  * @param {number} [timeout] — Tempo máximo de espera em ms
  */
-function gracefulShutdown(timeout = GRACEFUL_SHUTDOWN_TIMEOUT) {
+async function gracefulShutdown(timeout = GRACEFUL_SHUTDOWN_TIMEOUT) {
   logger.info("Iniciando graceful shutdown", { timeout });
 
-  const server = app;
-  const deadline = Date.now() + timeout;
+  const srv = server;
+  if (!srv) {
+    logger.warn("Servidor HTTP não está disponível, pulando graceful shutdown");
+    return;
+  }
 
   return new Promise((resolve) => {
-    // Contador de conexões ativas
     let activeConnections = 0;
     let connectionsDone = false;
     let forceExitTimer = null;
 
     const checkDone = () => {
       if (connectionsDone) {
-        if (forceExitTimer) clearInterval(forceExitTimer);
-        logger.info("Servidor Express fechado — toutes les connexions drainées");
+        if (forceExitTimer) clearTimeout(forceExitTimer);
+        logger.info("Todas as conexões drenadas — servidor fechado");
         resolve();
       }
     };
 
-    // Agora fechamos o servidor (server.close) fecha após conexões acabarem
     logger.info("Parando de aceitar novas conexões");
-    server.close(() => {
+    srv.close(() => {
       connectionsDone = true;
       checkDone();
     });
 
-    // Monitorar conexões entrantes/saindo
-    server.on("connection", (socket) => {
+    srv.on("connection", (socket: any) => {
       activeConnections++;
-      logger.info("Nova conexão estabelecida", { total: activeConnections });
+      logger.debug("Nova conexão estabelecida", { activeConnections });
 
       socket.on("close", () => {
         activeConnections = Math.max(0, activeConnections - 1);
-        logger.info("Conexão finalizada", { remaining: activeConnections });
+        logger.debug("Conexão finalizada", { activeConnections });
         if (activeConnections === 0 && connectionsDone) {
           checkDone();
         }
       });
     });
 
-    // Timeout: forçar shutdown se demorar muito
-    forceExitTimer = setInterval(() => {
-      if (Date.now() >= deadline) {
-        logger.error("Forçando shutdown — timeout excedido", {
-          activeConnections,
-          elapsed: Date.now() - (Date.now() - timeout)
-        });
-        if (forceExitTimer) clearInterval(forceExitTimer);
-        process.exit(1);
-      }
-    }, 100);
-
-    // Garantir cleanup em qualquer erro
-    server.on("error", (err) => {
+    srv.on("error", (err: any) => {
       logger.error("Erro no servidor durante graceful shutdown", { error: err.message });
-      if (forceExitTimer) clearInterval(forceExitTimer);
+      if (forceExitTimer) clearTimeout(forceExitTimer);
     });
+
+    forceExitTimer = setTimeout(() => {
+      logger.error("Timeout de graceful shutdown excedido — forçando saída", {
+        activeConnections,
+        timeout,
+      });
+      if (forceExitTimer) clearTimeout(forceExitTimer);
+      resolve(); // deixa o fluxo normal chamar process.exit
+    }, timeout);
   });
 }
 
-// Handlers de sinal para graceful shutdown
-app.on("SIGTERM", async () => {
+// Handlers de sinal para graceful shutdown — USA process.on, NÃO app.on
+process.on("SIGTERM", async () => {
   logger.info("Sinal SIGTERM recebido — iniciando graceful shutdown");
-  await gracefulShutdown();
+  try {
+    await gracefulShutdown();
+  } catch (e: any) {
+    logger.error("Erro durante graceful shutdown (SIGTERM)", { error: e.message });
+  }
   logger.info("Shutdown completo — saindo");
   process.exit(0);
 });
 
-app.on("SIGINT", async () => {
+process.on("SIGINT", async () => {
   logger.info("Sinal SIGINT recebido — iniciando graceful shutdown");
-  await gracefulShutdown();
+  try {
+    await gracefulShutdown();
+  } catch (e: any) {
+    logger.error("Erro durante graceful shutdown (SIGINT)", { error: e.message });
+  }
   logger.info("Shutdown completo — saindo");
   process.exit(0);
 });
