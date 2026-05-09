@@ -34,13 +34,15 @@ let allowQuit = false;
 function restoreWindow() {
   if (!win) return;
 
-  win.setSkipTaskbar(false);
-
   if (win.isMinimized()) {
     win.restore();
   }
 
-  win.show();
+  if (!win.isVisible()) {
+    win.show();
+  }
+
+  win.setSkipTaskbar(false);
   win.focus();
 }
 
