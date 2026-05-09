@@ -882,6 +882,19 @@ body::before {
   border-color: var(--purple-500);
 }
 
+/* Validação de PIN — feedback visual */
+.input-field.valid,
+.modal-input.valid {
+  border-color: var(--success) !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
+}
+
+.input-field.invalid,
+.modal-input.invalid {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
 #pinModalMsg {
   min-height: 20px;
   color: var(--error);

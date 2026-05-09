@@ -207,6 +207,19 @@ body {
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
+/* Validação de PIN — feedback visual */
+.input-field.valid,
+.modal-input.valid {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
+}
+
+.input-field.invalid,
+.modal-input.invalid {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
 .input-field::placeholder {
   color: var(--gray-500);
 }

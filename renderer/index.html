@@ -24,8 +24,8 @@
     <div class="modal-box">
       <div class="modal-header">Bem-vindo — Crie um PIN de acesso</div>
       <p>Defina um PIN de pelo menos 4 dígitos para proteger o acesso remoto.</p>
-      <input id="firstPin" type="password" placeholder="Novo PIN" class="modal-input" />
-      <input id="firstPinConfirm" type="password" placeholder="Confirme o PIN" class="modal-input" />
+      <input id="firstPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="Novo PIN" class="modal-input" autocomplete="off" />
+      <input id="firstPinConfirm" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="Confirme o PIN" class="modal-input" autocomplete="off" />
       <div id="pinModalMsg"></div>
       <div class="modal-actions">
         <button onclick="createFirstPin()" class="btn btn-primary">Criar PIN</button>
@@ -99,7 +99,7 @@
               <h2>Autenticação</h2>
             </div>
             <div class="card-body">
-              <input type="password" id="pin" placeholder="Digite seu PIN" class="input-field" />
+              <input type="password" id="pin" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="Digite seu PIN" class="input-field" autocomplete="off" />
               <button class="btn btn-danger" onclick="send('/shutdown')">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
@@ -251,8 +251,8 @@
                 <span><strong>Não</strong> compartilhe seu PIN com ninguém.</span>
               </div>
               <div class="config-form">
-                <input type="password" id="currentPin" placeholder="PIN atual" class="input-field" />
-                <input type="password" id="newPin" placeholder="Novo PIN" class="input-field" />
+              <input type="password" id="currentPin" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="PIN atual" class="input-field" autocomplete="off" />
+              <input type="password" id="newPin" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="Novo PIN" class="input-field" autocomplete="off" />
                 <div class="button-group">
                   <button class="btn btn-primary" onclick="savePin()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
