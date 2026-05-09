@@ -3,7 +3,8 @@
  * Usa shared/api.js para funções compartilhadas
  */
 
-const { PORT, PIN_MAX_LENGTH } = require("../shared/constants");
+const PORT = 3333;
+const PIN_MAX_LENGTH = 20;
 
 // ============================================================================
 // CONSTANTS
@@ -31,6 +32,14 @@ function init() {
   loadQRCode(API_URL, el.qr, el.link, (url) => window.api?.openExternal(url));
   checkPinConfigured();
   statusPollingCleanup = startStatusPolling(API_URL, el.timer, el.statusCard);
+  attachEventListeners(); // CSP-compliant event binding
+
+  // Cleanup ao fechar janela
+  window.addEventListener("beforeunload", () => {
+    if (statusPollingCleanup) {
+      statusPollingCleanup();
+    }
+  });
 }
 
 function cacheElements() {
@@ -311,10 +320,10 @@ function loadIPv6Link() {
         el.ipv6Link.href = "#";
         el.ipv6Link.textContent = url;
         el.ipv6Link.style.cursor = "pointer";
-        el.ipv6Link.onclick = (e) => {
+        el.ipv6Link.addEventListener("click", (e) => {
           e.preventDefault();
           window.api?.openExternal(url);
-        };
+        });
       }
     })
     .catch(() => {
@@ -417,7 +426,93 @@ function installUpdate() {
 }
 
 // ============================================================================
-// GLOBAL EXPORTS (para onclick no HTML)
+// CSP-COMPLIANT EVENT LISTENERS (injeta listeners após DOM carregar)
+// ============================================================================
+function attachEventListeners() {
+  const tabControl = document.getElementById("navControl");
+  const tabConfig = document.getElementById("navConfig");
+  const tabAbout = document.getElementById("navAbout");
+
+  if (tabControl) tabControl.addEventListener("click", () => showTab("control"));
+  if (tabConfig) tabConfig.addEventListener("click", () => showTab("config"));
+  if (tabAbout) tabAbout.addEventListener("click", () => showTab("about"));
+
+  const btnClose = document.getElementById("btnClose");
+  if (btnClose) btnClose.addEventListener("click", () => window.api.close());
+
+  const btnCreateFirstPin = document.getElementById("btnCreateFirstPin");
+  if (btnCreateFirstPin) btnCreateFirstPin.addEventListener("click", handleCreateFirstPin);
+
+  const btnShutdownNow = document.getElementById("btnShutdownNow");
+  if (btnShutdownNow) btnShutdownNow.addEventListener("click", () => send("/shutdown"));
+
+  const btnShutdown10 = document.getElementById("btnShutdown10");
+  if (btnShutdown10) btnShutdown10.addEventListener("click", () => send("/shutdown/10"));
+
+  const btnShutdown30 = document.getElementById("btnShutdown30");
+  if (btnShutdown30) btnShutdown30.addEventListener("click", () => send("/shutdown/30"));
+
+  const btnShutdown60 = document.getElementById("btnShutdown60");
+  if (btnShutdown60) btnShutdown60.addEventListener("click", () => send("/shutdown/60"));
+
+  const btnCancel = document.getElementById("btnCancel");
+  if (btnCancel) btnCancel.addEventListener("click", () => send("/cancel"));
+
+  const btnScheduleExact = document.getElementById("btnScheduleExact");
+  if (btnScheduleExact) btnScheduleExact.addEventListener("click", handleScheduleExact);
+
+  const qrLocalBtn = document.getElementById("qrLocalBtn");
+  const qrRemotoBtn = document.getElementById("qrRemotoBtn");
+
+  if (qrLocalBtn) qrLocalBtn.addEventListener("click", () => showQRCode("local"));
+  if (qrRemotoBtn) {
+    qrRemotoBtn.addEventListener("click", () => {
+      showQRCode("remoto");
+      qrLocalBtn.classList.remove("active");
+      qrRemotoBtn.classList.add("active");
+    });
+    qrLocalBtn.addEventListener("click", () => {
+      showQRCode("local");
+      qrRemotoBtn.classList.remove("active");
+      qrLocalBtn.classList.add("active");
+    });
+  }
+
+  const btnSavePin = document.getElementById("btnSavePin");
+  if (btnSavePin) btnSavePin.addEventListener("click", handleSavePin);
+
+  const btnResetPinDesktop = document.getElementById("btnResetPinDesktop");
+  if (btnResetPinDesktop) btnResetPinDesktop.addEventListener("click", resetPinDesktop);
+
+  const cbAutoStart = document.getElementById("cb3-8");
+  if (cbAutoStart) {
+    cbAutoStart.addEventListener("change", (e) => {
+      window.api.autoStart(e.target.checked);
+    });
+  }
+
+  const ipv6Toggle = document.getElementById("ipv6Toggle");
+  if (ipv6Toggle) ipv6Toggle.addEventListener("change", (e) => toggleIPv6(e.target.checked));
+
+  // --- About tab event listeners ---
+  const btnCheckUpdate = document.getElementById("btnCheckUpdate");
+  if (btnCheckUpdate) btnCheckUpdate.addEventListener("click", checkForUpdates);
+
+  const btnInstallUpdate = document.getElementById("btnInstallUpdate");
+  if (btnInstallUpdate) btnInstallUpdate.addEventListener("click", installUpdate);
+
+  const btnBackToControl = document.getElementById("btnBackToControl");
+  if (btnBackToControl) btnBackToControl.addEventListener("click", () => showTab("control"));
+
+  const ghLink = document.getElementById("ghLink");
+  if (ghLink) ghLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.api?.openExternal('https://github.com/ChamPlz/shutdw');
+  });
+}
+
+// ============================================================================
+// GLOBAL EXPORTS (para onclick no HTML — mantido para compatibilidade)
 // ============================================================================
 window.showTab = (tabName) => {
   // Tratar aba About (usa display flex para centralizar)
@@ -438,6 +533,11 @@ window.checkForUpdates = checkForUpdates;
 window.installUpdate = installUpdate;
 
 // ============================================================================
-// START
+// START — CSP-compliant bootstrap
 // ============================================================================
-document.addEventListener("DOMContentLoaded", init);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  // DOM já está pronto — init() chamado imediatamente
+  init();
+}
