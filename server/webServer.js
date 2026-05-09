@@ -170,4 +170,77 @@ app.listen(PORT, () => {
   logger.info("Servidor web iniciado", { port: PORT, url: `http://localhost:${PORT}` });
 });
 
+/**
+ * Graceful shutdown — para o servidor sem perder conexões ativas
+ * @param {number} [timeout=10000] — Tempo máximo de espera em ms
+ */
+function gracefulShutdown(timeout = 10000) {
+  logger.info("Iniciando graceful shutdown", { timeout });
+
+  const server = app;
+  const deadline = Date.now() + timeout;
+
+  return new Promise((resolve) => {
+    // Contador de conexões ativas
+    let activeConnections = 0;
+    let connectionsDone = false;
+
+    const checkDone = () => {
+      if (connectionsDone) {
+        clearInterval(timer);
+        logger.info("Servidor Express fechado — todas conexões drenadas");
+        resolve();
+      }
+    };
+
+    // Agora fechamos o servidor (server.close) fecha após conexões acabarem
+    logger.info("Parando de aceitar novas conexões");
+    server.close(() => {
+      connectionsDone = true;
+      checkDone();
+    });
+
+    // Monitorar conexões entrantes/saindo
+    server.on("connection", (socket) => {
+      activeConnections++;
+      logger.info("Nova conexão estabelecida", { total: activeConnections });
+
+      socket.on("close", () => {
+        activeConnections = Math.max(0, activeConnections - 1);
+        logger.info("Conexão finalizada", { remaining: activeConnections });
+        if (activeConnections === 0 && connectionsDone) {
+          checkDone();
+        }
+      });
+    });
+
+    // Timeout: forçar shutdown se demorar muito
+    const timer = setInterval(() => {
+      if (Date.now() >= deadline) {
+        logger.error("Forçando shutdown — timeout excedido", {
+          activeConnections,
+          elapsed: Date.now() - (Date.now() - timeout)
+        });
+        clearInterval(timer);
+        process.exit(1);
+      }
+    }, 100);
+  });
+}
+
+// Handlers de sinal para graceful shutdown
+app.on("SIGTERM", async () => {
+  logger.info("Sinal SIGTERM recebido — iniciando graceful shutdown");
+  await gracefulShutdown(10000);
+  logger.info("Shutdown completo — saindo");
+  process.exit(0);
+});
+
+app.on("SIGINT", async () => {
+  logger.info("Sinal SIGINT recebido — iniciando graceful shutdown");
+  await gracefulShutdown(8000);
+  logger.info("Shutdown completo — saindo");
+  process.exit(0);
+});
+
 module.exports = app;
