@@ -8,6 +8,26 @@ const platform = require("./platform");
 
 const EXEC_TIMEOUT = 5000; // 5 segundos
 
+// ============================================================================
+// QR CODE CACHE — 5 minutos TTL
+// ============================================================================
+const QR_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+const qrCache = new Map(); // key: ip/ipv6, value: { data, timestamp }
+
+function getCachedIP(key) {
+  const entry = qrCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > QR_CACHE_TTL) {
+    qrCache.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCachedIP(key, data) {
+  qrCache.set(key, { data, timestamp: Date.now() });
+}
+
 const PORT = 3333;
 
 /**
@@ -95,19 +115,35 @@ function createRoutes(config) {
   // ==========================================================================
 
   router.get("/ip", async (req, res) => {
+    const cached = getCachedIP("ipv4");
+    if (cached) {
+      res.setHeader("Cache-Control", "public, max-age=300");
+      return res.json(cached);
+    }
     const ip = await getOutboundIp();
-    res.json({ ip, url: `http://${ip}:${PORT}`, ipVersion: "IPv4" });
+    const data = { ip, url: `http://${ip}:${PORT}`, ipVersion: "IPv4" };
+    setCachedIP("ipv4", data);
+    res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=30");
+    res.json(data);
   });
 
   router.get("/ip6", async (req, res) => {
     if (!config.useIPv6) {
       return res.status(403).json({ error: "Acesso IPv6 desabilitado" });
     }
+    const cached = getCachedIP("ipv6");
+    if (cached) {
+      res.setHeader("Cache-Control", "public, max-age=300");
+      return res.json(cached);
+    }
     const ipv6Address = await getOutboundIpv6();
     if (!ipv6Address) {
       return res.status(404).json({ error: "IPv6 não disponível" });
     }
-    res.json({ ipv6: ipv6Address, url: `http://[${ipv6Address}]:${PORT}`, enabled: true });
+    const data = { ipv6: ipv6Address, url: `http://[${ipv6Address}]:${PORT}`, enabled: true };
+    setCachedIP("ipv6", data);
+    res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=30");
+    res.json(data);
   });
 
   // ==========================================================================
