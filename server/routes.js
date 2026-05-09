@@ -5,13 +5,15 @@ const { getOutboundIp, getOutboundIpv6, hasIPv6Available, isIPv6 } = require("./
 const { scheduleShutdown, cancelShutdown } = require("./shutdown");
 const { exec } = require("child_process");
 const platform = require("./platform");
-
-const EXEC_TIMEOUT = 5000; // 5 segundos
+const {
+  EXEC_TIMEOUT,
+  QR_CACHE_TTL,
+  PORT,
+} = require("../shared/constants");
 
 // ============================================================================
-// QR CODE CACHE — 5 minutos TTL
+// QR CODE CACHE
 // ============================================================================
-const QR_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 const qrCache = new Map(); // key: ip/ipv6, value: { data, timestamp }
 
 function getCachedIP(key) {

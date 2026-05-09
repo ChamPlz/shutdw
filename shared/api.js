@@ -3,11 +3,10 @@
  * Contém funções reutilizadas por ambas as interfaces
  */
 
-// ============================================================================
-// QR CODE CACHE — 5 minutos TTL
-// ============================================================================
-const QR_CACHE_KEY = "shutdw_qr_cache";
-const QR_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+const {
+  QR_CACHE_TTL,
+  QR_CACHE_KEY,
+} = require("./constants");
 
 /**
  * Retorna cachedata de IP da localStorage se ainda válida

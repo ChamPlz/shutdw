@@ -4,8 +4,18 @@ const path = require("path");
 
 const { loadConfig } = require("./config");
 const { cancelShutdown } = require("./shutdown");
-const { createRoutes, PORT } = require("./routes");
+const { createRoutes } = require("./routes");
 const { createLogger } = require("../logger");
+const {
+  PORT,
+  RATE_LIMIT_WINDOW_MS,
+  RATE_LIMIT_READ_MAX,
+  RATE_LIMIT_ACTION_MAX,
+  RATE_LIMIT_AUTH_MAX,
+  CORS_ALLOWED_ORIGINS,
+  CORS_PREFLIGHT_MAX_AGE,
+  GRACEFUL_SHUTDOWN_TIMEOUT,
+} = require("../shared/constants");
 
 // Logger com contexto "server"
 const logger = createLogger("server");
@@ -42,13 +52,12 @@ app.use((req, res, next) => {
 // CORS restrito: permite apenas localhost (desktop app)
 // A interface web remota é servida pelo mesmo servidor, então origin será file:// ou null
 // Na prática, para app desktop, o origin é app://localhost ou http://localhost:3333
-const allowedOrigins = ["http://localhost:3333", "app://localhost", "file://"];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
   // Rejeitar origins não permitidas
-  if (origin && !allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+  if (origin && !CORS_ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed))) {
     logger.warn("CORS blocked — origin not allowed", { origin });
     return res.status(403).json({ error: "Origin not allowed" });
   }
@@ -58,7 +67,7 @@ app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Pin");
     res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Max-Age", "86400"); // 24h cache
+    res.setHeader("Access-Control-Max-Age", CORS_PREFLIGHT_MAX_AGE);
     res.setHeader("Access-Control-Allow-Origin", origin || "*");
     return res.status(204).end();
   }
@@ -99,22 +108,22 @@ app.use(express.static(path.join(__dirname, "../shared")));
 
 // Rate limits diferenciados por tipo de operação
 const readLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 120,
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  limit: RATE_LIMIT_READ_MAX,
   message: { error: "Muitas requisições, tente novamente em breve." },
   statusCode: 429,
 });
 
 const actionLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 20,
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  limit: RATE_LIMIT_ACTION_MAX,
   message: { error: "Muitas ações, aguarde antes de tentar novamente." },
   statusCode: 429,
 });
 
 const authLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 5,
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  limit: RATE_LIMIT_AUTH_MAX,
   message: { error: "Muitas tentativas de autenticação. Tente novamente em 1 minuto." },
   statusCode: 429,
 });
@@ -175,9 +184,9 @@ app.listen(PORT, () => {
 
 /**
  * Graceful shutdown — para o servidor sem perder conexões ativas
- * @param {number} [timeout=10000] — Tempo máximo de espera em ms
+ * @param {number} [timeout] — Tempo máximo de espera em ms
  */
-function gracefulShutdown(timeout = 10000) {
+function gracefulShutdown(timeout = GRACEFUL_SHUTDOWN_TIMEOUT) {
   logger.info("Iniciando graceful shutdown", { timeout });
 
   const server = app;
@@ -234,14 +243,14 @@ function gracefulShutdown(timeout = 10000) {
 // Handlers de sinal para graceful shutdown
 app.on("SIGTERM", async () => {
   logger.info("Sinal SIGTERM recebido — iniciando graceful shutdown");
-  await gracefulShutdown(10000);
+  await gracefulShutdown();
   logger.info("Shutdown completo — saindo");
   process.exit(0);
 });
 
 app.on("SIGINT", async () => {
   logger.info("Sinal SIGINT recebido — iniciando graceful shutdown");
-  await gracefulShutdown(8000);
+  await gracefulShutdown();
   logger.info("Shutdown completo — saindo");
   process.exit(0);
 });

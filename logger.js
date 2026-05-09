@@ -2,13 +2,20 @@ const { app } = require("electron");
 const path = require("path");
 const winston = require("winston");
 const DailyRotateFile = require("winston-daily-rotate-file");
+const {
+  LOG_DIR,
+  LOG_MAX_SIZE,
+  LOG_MAX_FILES,
+  LOG_ERROR_MAX_SIZE,
+  LOG_ERROR_MAX_FILES,
+} = require("./shared/constants");
 
 /**
  * Configuração de logging estruturado
  * Usa winston com rotação diária de arquivos
  */
 
-const logDir = path.join(app.getPath("userData"), "logs");
+const logDir = path.join(app.getPath("userData"), LOG_DIR);
 
 // Formato de log estruturado
 const logFormat = winston.format.combine(
@@ -35,8 +42,8 @@ const consoleFormat = winston.format.combine(
 const fileTransport = new DailyRotateFile({
   filename: path.join(logDir, "shutdw-%DATE%.log"),
   datePattern: "YYYY-MM-DD",
-  maxSize: "5m",
-  maxFiles: "14d",
+  maxSize: LOG_MAX_SIZE,
+  maxFiles: LOG_MAX_FILES,
   format: logFormat,
 });
 
@@ -45,8 +52,8 @@ const errorTransport = new DailyRotateFile({
   filename: path.join(logDir, "shutdw-error-%DATE%.log"),
   datePattern: "YYYY-MM-DD",
   level: "error",
-  maxSize: "5m",
-  maxFiles: "30d",
+  maxSize: LOG_ERROR_MAX_SIZE,
+  maxFiles: LOG_ERROR_MAX_FILES,
   format: logFormat,
 });
 

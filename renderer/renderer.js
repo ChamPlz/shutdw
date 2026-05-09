@@ -3,10 +3,12 @@
  * Usa shared/api.js para funções compartilhadas
  */
 
+const { PORT, PIN_MAX_LENGTH } = require("../shared/constants");
+
 // ============================================================================
 // CONSTANTS
 // ============================================================================
-const API_URL = "http://localhost:3333";
+const API_URL = `http://localhost:${PORT}`;
 
 // ============================================================================
 // DOM ELEMENTS
@@ -87,8 +89,8 @@ function setupPinValidation(input) {
       input.value = numericOnly;
     }
     // Limita comprimento máximo
-    if (input.value.length > 20) {
-      input.value = input.value.slice(0, 20);
+    if (input.value.length > PIN_MAX_LENGTH) {
+      input.value = input.value.slice(0, PIN_MAX_LENGTH);
     }
   });
 
@@ -111,7 +113,7 @@ function setupPinValidation(input) {
     // Extrai apenas dígitos
     const numericOnly = pasted.replace(/\D/g, "");
     if (numericOnly) {
-      input.value = numericOnly.slice(0, 20);
+      input.value = numericOnly.slice(0, PIN_MAX_LENGTH);
       // Dispara input para atualizar estado
       input.dispatchEvent(new Event("input", { bubbles: true }));
     }
