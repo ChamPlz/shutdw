@@ -60,9 +60,9 @@ function createOverlay() {
 function closeOverlay() {
   if (overlayWindow) {
     // Cancela timer se ativo
-    if (overlayTimer) {
-      clearInterval(overlayTimer);
-      overlayTimer = null;
+    if (overlayWindow._overlayTimer) {
+      clearInterval(overlayWindow._overlayTimer);
+      overlayWindow._overlayTimer = null;
     }
     // Remove listeners IPC para evitar memory leak
     overlayWindow.webContents.removeAllListeners("overlay:update");
