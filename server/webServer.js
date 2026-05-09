@@ -196,11 +196,12 @@ function gracefulShutdown(timeout = GRACEFUL_SHUTDOWN_TIMEOUT) {
     // Contador de conexões ativas
     let activeConnections = 0;
     let connectionsDone = false;
+    let forceExitTimer = null;
 
     const checkDone = () => {
       if (connectionsDone) {
-        clearInterval(timer);
-        logger.info("Servidor Express fechado — todas conexões drenadas");
+        if (forceExitTimer) clearInterval(forceExitTimer);
+        logger.info("Servidor Express fechado — toutes les connexions drainées");
         resolve();
       }
     };
@@ -227,16 +228,22 @@ function gracefulShutdown(timeout = GRACEFUL_SHUTDOWN_TIMEOUT) {
     });
 
     // Timeout: forçar shutdown se demorar muito
-    const timer = setInterval(() => {
+    forceExitTimer = setInterval(() => {
       if (Date.now() >= deadline) {
         logger.error("Forçando shutdown — timeout excedido", {
           activeConnections,
           elapsed: Date.now() - (Date.now() - timeout)
         });
-        clearInterval(timer);
+        if (forceExitTimer) clearInterval(forceExitTimer);
         process.exit(1);
       }
     }, 100);
+
+    // Garantir cleanup em qualquer erro
+    server.on("error", (err) => {
+      logger.error("Erro no servidor durante graceful shutdown", { error: err.message });
+      if (forceExitTimer) clearInterval(forceExitTimer);
+    });
   });
 }
 
