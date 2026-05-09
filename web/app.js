@@ -3,7 +3,7 @@
  * Usa shared/api.js para funções compartilhadas
  */
 
-const { PIN_MAX_LENGTH } = require("../shared/constants");
+const PIN_MAX_LENGTH = 20;
 
 // ============================================================================
 // CONSTANTS
@@ -22,8 +22,16 @@ function init() {
   cacheElements();
   loadQRCode(API_URL, el.qr, el.link, (url) => window.open(url, "_blank"));
   checkPinConfigured();
-  startStatusPolling(API_URL, el.timer, el.statusContainer);
+  window._statusPollingCleanup = startStatusPolling(API_URL, el.timer, el.statusContainer);
+  attachEventListeners(); // CSP-compliant event binding
 }
+
+// Cleanup ao fechar/recarregar a página
+window.addEventListener("beforeunload", () => {
+  if (window._statusPollingCleanup) {
+    window._statusPollingCleanup();
+  }
+});
 
 function cacheElements() {
   const $ = (id) => document.getElementById(id);
@@ -41,10 +49,37 @@ function cacheElements() {
   el.newPin = $("newPin");
   el.qr = $("qr");
   el.link = $("link");
+  el.btnCreateFirstPin = $("btnCreateFirstPin");
+  el.btnShutdownNow = $("btnShutdownNow");
+  el.btnShutdown10 = $("btnShutdown10");
+  el.btnShutdown30 = $("btnShutdown30");
+  el.btnShutdown60 = $("btnShutdown60");
+  el.btnCancel = $("btnCancel");
+  el.btnScheduleExact = $("btnScheduleExact");
+  el.btnSavePin = $("btnSavePin");
+  el.navControl = $("navControl");
+  el.navConfig = $("navConfig");
 
   // Configurar validação e proteção de inputs de PIN
   const pinInputs = [el.pin, el.firstPin, el.firstPinConfirm, el.currentPin, el.newPin];
   pinInputs.forEach(setupPinValidation);
+}
+
+// ============================================================================
+// CSP-COMPLIANT EVENT LISTENERS
+// ============================================================================
+function attachEventListeners() {
+  if (el.navControl) el.navControl.addEventListener("click", () => showTab("control"));
+  if (el.navConfig) el.navConfig.addEventListener("click", () => showTab("config"));
+
+  if (el.btnCreateFirstPin) el.btnCreateFirstPin.addEventListener("click", handleCreateFirstPin);
+  if (el.btnShutdownNow) el.btnShutdownNow.addEventListener("click", () => send("/shutdown"));
+  if (el.btnShutdown10) el.btnShutdown10.addEventListener("click", () => send("/shutdown/10"));
+  if (el.btnShutdown30) el.btnShutdown30.addEventListener("click", () => send("/shutdown/30"));
+  if (el.btnShutdown60) el.btnShutdown60.addEventListener("click", () => send("/shutdown/60"));
+  if (el.btnCancel) el.btnCancel.addEventListener("click", () => send("/cancel"));
+  if (el.btnScheduleExact) el.btnScheduleExact.addEventListener("click", handleScheduleExact);
+  if (el.btnSavePin) el.btnSavePin.addEventListener("click", handleSavePin);
 }
 
 /**
@@ -164,6 +199,11 @@ window.savePin = handleSavePin;
 window.createFirstPin = handleCreateFirstPin;
 
 // ============================================================================
-// START
+// START — CSP-compliant bootstrap
 // ============================================================================
-document.addEventListener("DOMContentLoaded", init);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  // DOM já está pronto — init() chamado imediatamente
+  init();
+}
