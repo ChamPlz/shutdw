@@ -216,7 +216,7 @@ async function gracefulShutdown(timeout = GRACEFUL_SHUTDOWN_TIMEOUT) {
       checkDone();
     });
 
-    srv.on("connection", (socket: any) => {
+    srv.on("connection", (socket) => {
       activeConnections++;
       logger.debug("Nova conexão estabelecida", { activeConnections });
 
@@ -229,7 +229,7 @@ async function gracefulShutdown(timeout = GRACEFUL_SHUTDOWN_TIMEOUT) {
       });
     });
 
-    srv.on("error", (err: any) => {
+    srv.on("error", (err) => {
       logger.error("Erro no servidor durante graceful shutdown", { error: err.message });
       if (forceExitTimer) clearTimeout(forceExitTimer);
     });
@@ -250,7 +250,7 @@ process.on("SIGTERM", async () => {
   logger.info("Sinal SIGTERM recebido — iniciando graceful shutdown");
   try {
     await gracefulShutdown();
-  } catch (e: any) {
+  } catch (e) {
     logger.error("Erro durante graceful shutdown (SIGTERM)", { error: e.message });
   }
   logger.info("Shutdown completo — saindo");
@@ -261,7 +261,7 @@ process.on("SIGINT", async () => {
   logger.info("Sinal SIGINT recebido — iniciando graceful shutdown");
   try {
     await gracefulShutdown();
-  } catch (e: any) {
+  } catch (e) {
     logger.error("Erro durante graceful shutdown (SIGINT)", { error: e.message });
   }
   logger.info("Shutdown completo — saindo");
