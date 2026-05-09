@@ -293,24 +293,25 @@ function toggleIPv6(enabled) {
 }
 
 function loadIPv6Link() {
-  apiRequest(API_URL, "/ip6")
+  getCachedIP(API_URL, "/ip6", "ipv6")
     .then(data => {
       if (!el.qrRemotoBtn) return;
       if (!data.url) {
         el.qrRemotoBtn.style.display = "none";
         return;
       }
+      const url = data.url;
       el.qrRemotoBtn.style.display = "inline-block";
       if (el.qrIpv6) {
-        el.qrIpv6.src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(data.url)}`;
+        el.qrIpv6.src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(url)}`;
       }
       if (el.ipv6Link) {
         el.ipv6Link.href = "#";
-        el.ipv6Link.textContent = data.url;
+        el.ipv6Link.textContent = url;
         el.ipv6Link.style.cursor = "pointer";
         el.ipv6Link.onclick = (e) => {
           e.preventDefault();
-          window.api?.openExternal(data.url);
+          window.api?.openExternal(url);
         };
       }
     })

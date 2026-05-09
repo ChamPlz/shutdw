@@ -4,6 +4,73 @@
  */
 
 // ============================================================================
+// QR CODE CACHE — 5 minutos TTL
+// ============================================================================
+const QR_CACHE_KEY = "shutdw_qr_cache";
+const QR_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+/**
+ * Retorna cachedata de IP da localStorage se ainda válida
+ * @param {string} key - "ipv4" ou "ipv6"
+ * @returns {object|null}
+ */
+function getLocalIPCache(key) {
+  try {
+    const raw = localStorage.getItem(QR_CACHE_KEY);
+    if (!raw) return null;
+    const cache = JSON.parse(raw);
+    if (!cache[key]) return null;
+
+    const entry = cache[key];
+    if (Date.now() - entry.timestamp > QR_CACHE_TTL) {
+      // Expirado — limpa
+      delete cache[key];
+      localStorage.setItem(QR_CACHE_KEY, JSON.stringify(cache));
+      return null;
+    }
+    return entry.data;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Salva dados de IP na localStorage com timestamp
+ * @param {string} key - "ipv4" ou "ipv6"
+ * @param {object} data - Dados da resposta
+ */
+function setLocalIPCache(key, data) {
+  try {
+    const raw = localStorage.getItem(QR_CACHE_KEY);
+    const cache = raw ? JSON.parse(raw) : {};
+    cache[key] = { data, timestamp: Date.now() };
+    localStorage.setItem(QR_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // localStorage indisponível (modo privado/incognito)
+  }
+}
+
+/**
+ * Busca IP (cached ou fresh) — abstrai lógica de cache entre apps
+ * @param {string} baseUrl - URL base da API
+ * @param {string} route - "/ip" ou "/ip6"
+ * @param {string} cacheKey - "ipv4" ou "ipv6"
+ * @returns {Promise<object>}
+ */
+async function getCachedIP(baseUrl, route, cacheKey) {
+  // Tenta cache local primeiro (funciona offline entre recargas)
+  const localCached = getLocalIPCache(cacheKey);
+  if (localCached) {
+    return localCached;
+  }
+
+  // Se não houver cache válido, busca da API
+  const data = await apiRequest(baseUrl, route);
+  setLocalIPCache(cacheKey, data);
+  return data;
+}
+
+// ============================================================================
 // API
 // ============================================================================
 
@@ -261,7 +328,7 @@ function scheduleExactTime(baseUrl, timePickerEl, pin, onResult) {
  * @param {function} [openFn] - Função para abrir URL (Electron ou window.open)
  */
 function loadQRCode(baseUrl, qrImg, linkEl, openFn) {
-  apiRequest(baseUrl, "/ip")
+  getCachedIP(baseUrl, "/ip", "ipv4")
     .then(data => {
       const url = data.url;
       if (qrImg) {
@@ -279,5 +346,39 @@ function loadQRCode(baseUrl, qrImg, linkEl, openFn) {
     })
     .catch(() => {
       if (linkEl) linkEl.textContent = "Erro ao carregar";
+    });
+}
+
+/**
+ * Carrega QR Code IPv6
+ * @param {string} baseUrl
+ * @param {HTMLImageElement} qrImg
+ * @param {HTMLAnchorElement} linkEl
+ * @param {function} [openFn] - Função para abrir URL (Electron ou window.open)
+ */
+function loadQRIpv6(baseUrl, qrImg, linkEl, openFn) {
+  getCachedIP(baseUrl, "/ip6", "ipv6")
+    .then(data => {
+      const url = data.url;
+      if (!url) {
+        if (qrImg) qrImg.style.display = "none";
+        if (linkEl) linkEl.textContent = "IPv6 não disponível";
+        return;
+      }
+      if (qrImg) {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+      }
+      if (linkEl) {
+        linkEl.textContent = url;
+        linkEl.href = "#";
+        linkEl.style.cursor = "pointer";
+        linkEl.onclick = (e) => {
+          e.preventDefault();
+          if (openFn) openFn(url);
+        };
+      }
+    })
+    .catch(() => {
+      if (linkEl) linkEl.textContent = "Erro ao carregar IPv6";
     });
 }
