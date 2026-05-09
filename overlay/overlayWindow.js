@@ -26,6 +26,8 @@ function createOverlay() {
     skipTaskbar: true,
     webPreferences: {
       preload: path.join(__dirname, "overlayPreload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
     },
   });
 

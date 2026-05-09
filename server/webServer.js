@@ -16,6 +16,36 @@ const config = loadConfig();
 // ============================================================================
 const app = express();
 
+// ============================================================================
+// SECURITY HEADERS
+// ============================================================================
+// CSP: Content Security Policy — backup da meta tag no HTML
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:3333; img-src 'self' data: blob:;"
+  );
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("X-DNS-Prefetch-Control", "off");
+  next();
+});
+
+// CORS restrito: permite apenas localhost (desktop app)
+// A interface web remota é servida pelo mesmo servidor, então origin será file:// ou null
+// Na prática, para app desktop, o origin é app://localhost ou http://localhost:3333
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = ["http://localhost:3333", "app://localhost", "file://"];
+  if (origin && !allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+    return res.status(403).json({ error: "Origin not allowed" });
+  }
+  res.setHeader("Access-Control-Allow-Origin", origin || "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  next();
+});
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../web")));
 app.use(express.static(path.join(__dirname, "../shared")));
@@ -44,6 +74,10 @@ const authLimiter = rateLimit({
 
 // Aplicar limiters por tipo de rota
 app.use("/config/pin", authLimiter);
+// Aplica rate limiting diferenciado:
+// - GET endpoints: readLimiter (120 req/min) — Leituras de status/config
+// - POST/PUT/DELETE endpoints: actionLimiter (20 req/min) — Operações destrutivas (shutdown, schedule, config changes)
+// - POST /config/pin: authLimiter (5 req/min) — Aplicado separadamente ANTES deste middleware
 app.use((req, res, next) => {
   if (req.method === "GET") return readLimiter(req, res, next);
   return actionLimiter(req, res, next);
