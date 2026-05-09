@@ -33,6 +33,17 @@ function createOverlay() {
 
   overlayWindow.loadFile(path.join(__dirname, "overlay.html"));
 
+  overlayWindow.webContents.on("did-finish-load", () => {
+    overlayWindow.webContents.executeJavaScript(`
+      (function() {
+        var btnClose = document.getElementById('btnClose');
+        var btnCancel = document.getElementById('btnCancel');
+        if (btnClose) btnClose.addEventListener('click', function(){ window.close(); });
+        if (btnCancel) btnCancel.addEventListener('click', function(){ overlay.cancel(); });
+      })();
+    `).catch(() => {});
+  });
+
   const win = overlayWindow;
   win.on("closed", () => {
     if (overlayWindow === win) {
