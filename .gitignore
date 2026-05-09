@@ -4,6 +4,5 @@
 /data
 RELEASE.md
 release.bat
-QWEN.md
-TESTING.md
 /.claude
+/.agents
