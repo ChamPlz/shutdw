@@ -2,8 +2,7 @@ const { exec } = require("child_process");
 const { saveConfig } = require("./config");
 const { createOverlay, closeOverlay, sendRemaining } = require("../overlay/overlayWindow");
 const platform = require("./platform");
-
-const EXEC_TIMEOUT = 5000; // 5 segundos
+const { EXEC_TIMEOUT } = require("../shared/constants");
 
 // ============================================================================
 // STATE

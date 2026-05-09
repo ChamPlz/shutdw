@@ -30,8 +30,6 @@ function setCachedIP(key, data) {
   qrCache.set(key, { data, timestamp: Date.now() });
 }
 
-const PORT = 3333;
-
 /**
  * Cria e configura todas as rotas da aplicação
  * @param {object} config - Referência ao objeto de configuração
