@@ -6,3 +6,4 @@ RELEASE.md
 release.bat
 /.claude
 /.agents
+/coverage
