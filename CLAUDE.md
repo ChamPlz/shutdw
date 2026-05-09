@@ -24,7 +24,7 @@ npm run build:all  # Windows x64 e ia32
 npm run publish
 ```
 
-**Nota:** Este projeto não possui scripts de `test` ou `lint` configurados no momento.
+**Nota:** O projeto possui script de `test` (`npm test`), mas ainda não possui script de `lint` configurado.
 
 ## Arquitetura de Alto Nível
 
