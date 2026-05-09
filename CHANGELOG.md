@@ -7,7 +7,6 @@
 
 #### Changed
 - README traduzido para inglês com novo banner e melhor formatação visual.
-- Configuração (`config.js`) agora suporta `analyticsClientId`.
 
 ---
 
