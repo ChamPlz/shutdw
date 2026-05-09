@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <!-- CSP: Restringe recursos externos e previne XSS -->
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:3333; img-src 'self' data: blob:;">
+        content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:3333; img-src 'self' data: blob: https://api.qrserver.com;">
 </head>
 <body>
   <!-- First-time PIN modal -->
@@ -19,7 +19,7 @@
       <input id="firstPinConfirm" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="Confirme o PIN" class="modal-input" autocomplete="off" />
       <div id="pinModalMsg" class="modal-msg"></div>
       <div class="modal-actions">
-        <button onclick="createFirstPin()" class="btn btn-primary">Criar PIN</button>
+        <button id="btnCreateFirstPin" class="btn btn-primary">Criar PIN</button>
       </div>
     </div>
   </div>
@@ -39,7 +39,7 @@
 
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab active" onclick="showTab('control')">
+        <button class="tab active" id="navControl">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
             <line x1="12" y1="8" x2="12" y2="12"/>
@@ -47,7 +47,7 @@
           </svg>
           Controle
         </button>
-        <button class="tab" onclick="showTab('config')">
+        <button class="tab" id="navConfig">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"/>
             <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
@@ -69,7 +69,7 @@
           </div>
           <div class="input-group">
             <input type="password" id="pin" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="Digite seu PIN" class="input-field" autocomplete="off" />
-            <button class="btn btn-danger" onclick="send('/shutdown')">
+            <button class="btn btn-danger" id="btnShutdownNow">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
                 <line x1="12" y1="2" x2="12" y2="12"/>
@@ -89,20 +89,20 @@
             <h2>Desligamento Programado</h2>
           </div>
           <div class="timer-grid">
-            <button class="btn btn-timer" onclick="send('/shutdown/10')">
+            <button class="btn btn-timer" id="btnShutdown10">
               <span class="timer-value">10</span>
               <span class="timer-unit">minutos</span>
             </button>
-            <button class="btn btn-timer" onclick="send('/shutdown/30')">
+            <button class="btn btn-timer" id="btnShutdown30">
               <span class="timer-value">30</span>
               <span class="timer-unit">minutos</span>
             </button>
-            <button class="btn btn-timer" onclick="send('/shutdown/60')">
+            <button class="btn btn-timer" id="btnShutdown60">
               <span class="timer-value">60</span>
               <span class="timer-unit">minutos</span>
             </button>
           </div>
-          <button class="btn btn-secondary" onclick="send('/cancel')">
+          <button class="btn btn-secondary" id="btnCancel">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
               <line x1="15" y1="9" x2="9" y2="15"/>
@@ -125,7 +125,7 @@
           </div>
           <div class="schedule-group">
             <input type="time" id="timePicker" class="input-field" />
-            <button class="btn btn-primary" onclick="scheduleExact()">
+            <button class="btn btn-primary" id="btnScheduleExact">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
@@ -179,7 +179,7 @@
           <div class="config-group">
             <input type="password" id="currentPin" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="PIN atual" class="input-field" autocomplete="off" />
             <input type="password" id="newPin" inputmode="numeric" pattern="[0-9]*" maxlength="20" placeholder="Novo PIN" class="input-field" autocomplete="off" />
-            <button class="btn btn-primary" onclick="savePin()">
+            <button class="btn btn-primary" id="btnSavePin">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                 <polyline points="17 21 17 13 7 13 7 21"/>
