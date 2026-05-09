@@ -12,10 +12,10 @@ const {
   RATE_LIMIT_READ_MAX,
   RATE_LIMIT_ACTION_MAX,
   RATE_LIMIT_AUTH_MAX,
-  CORS_ALLOWED_ORIGINS,
   CORS_PREFLIGHT_MAX_AGE,
   GRACEFUL_SHUTDOWN_TIMEOUT,
 } = require("../shared/constants");
+const { getOutboundIp } = require("./network");
 
 // Logger com contexto "server"
 const logger = createLogger("server");
@@ -26,6 +26,24 @@ const logger = createLogger("server");
 const config = loadConfig();
 // Referência ao http.Server para graceful shutdown
 let server = null;
+
+// Origens CORS permitidas — dinâmica pois inclui IP local da rede
+let allowedOrigins = ["http://localhost:" + PORT, "app://localhost", "file://"];
+
+// Descobre o IP local da máquina na inicialização e adiciona às origens permitidas
+getOutboundIp(500)
+  .then((ip) => {
+    if (ip && ip !== "localhost") {
+      const ipOrigin = `http://${ip}:${PORT}`;
+      if (!allowedOrigins.includes(ipOrigin)) {
+        allowedOrigins.push(ipOrigin);
+        logger.info("IP local detectado — CORS habilitado para origem", { ip, origin: ipOrigin });
+      }
+    }
+  })
+  .catch((err) => {
+    logger.warn("Não foi possível detectar IP local para CORS", { error: err.message });
+  });
 
 // ============================================================================
 // EXPRESS SETUP
@@ -51,16 +69,19 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS restrito: permite apenas localhost (desktop app)
-// A interface web remota é servida pelo mesmo servidor, então origin será file:// ou null
-// Na prática, para app desktop, o origin é app://localhost ou http://localhost:3333
+// CORS restrito: permite localhost, app://localhost, file:// e o IP local da rede
+// A interface web remota é servida pelo mesmo servidor, então origin pode ser:
+// - http://localhost:3333 (desktop)
+// - app://localhost (Electron preload)
+// - file:// (web local)
+// - http://<IP-da-rede>:3333 (acesso remoto via QR code)
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
   // Rejeitar origins não permitidas
-  if (origin && !CORS_ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed))) {
-    logger.warn("CORS blocked — origin not allowed", { origin });
+  if (origin && !allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+    logger.warn("CORS blocked — origin not allowed", { origin, allowedOrigins });
     return res.status(403).json({ error: "Origin not allowed" });
   }
 
