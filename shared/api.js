@@ -3,10 +3,8 @@
  * Contém funções reutilizadas por ambas as interfaces
  */
 
-const {
-  QR_CACHE_TTL,
-  QR_CACHE_KEY,
-} = require("./constants");
+const QR_CACHE_TTL = 5 * 60 * 1000;
+const QR_CACHE_KEY = "shutdw_qr_cache";
 
 /**
  * Retorna cachedata de IP da localStorage se ainda válida
@@ -57,14 +55,18 @@ function setLocalIPCache(key, data) {
  * @returns {Promise<object>}
  */
 async function getCachedIP(baseUrl, route, cacheKey) {
+  console.log("[getCachedIP]", baseUrl, route, cacheKey);
   // Tenta cache local primeiro (funciona offline entre recargas)
   const localCached = getLocalIPCache(cacheKey);
   if (localCached) {
+    console.log("[getCachedIP] cache HIT:", cacheKey, localCached);
     return localCached;
   }
 
   // Se não houver cache válido, busca da API
+  console.log("[getCachedIP] cache MISS — buscando da API");
   const data = await apiRequest(baseUrl, route);
+  console.log("[getCachedIP] dados recebidos:", data);
   setLocalIPCache(cacheKey, data);
   return data;
 }
@@ -81,7 +83,11 @@ async function getCachedIP(baseUrl, route, cacheKey) {
  * @returns {Promise<object>}
  */
 async function apiRequest(baseUrl, route, options = {}) {
+  console.log("[apiRequest]", baseUrl + route);
   const response = await fetch(`${baseUrl}${route}`, options);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+  }
   return response.json();
 }
 
@@ -153,18 +159,25 @@ function updateTimer(timerEl, containerEl, remaining) {
 function startStatusPolling(baseUrl, timerEl, containerEl) {
   let intervalId = null;
   let hasActiveShutdown = false;
+  const FAST_POLL = 1000;
+  const SLOW_POLL = 5000;
 
   function poll() {
     apiRequest(baseUrl, "/status")
       .then(data => {
         updateTimer(timerEl, containerEl, data.remaining);
-        // Se não há shutdown ativo, reduz frequência para 5s
-        if (data.remaining == null && hasActiveShutdown) {
+
+        const isActive = data.remaining != null;
+
+        // Transição only when state changes
+        if (isActive && !hasActiveShutdown) {
+          hasActiveShutdown = true;
+          clearInterval(intervalId);
+          intervalId = setInterval(poll, FAST_POLL);
+        } else if (!isActive && hasActiveShutdown) {
           hasActiveShutdown = false;
           clearInterval(intervalId);
-          intervalId = setInterval(poll, 5000);
-        } else if (data.remaining != null) {
-          hasActiveShutdown = true;
+          intervalId = setInterval(poll, SLOW_POLL);
         }
       })
       .catch(() => {
@@ -175,10 +188,13 @@ function startStatusPolling(baseUrl, timerEl, containerEl) {
       });
   }
 
-  // Inicia polling rápido (1s)
-  intervalId = setInterval(poll, 1000);
+  // Primeira execução imediata para detectar estado inicial
+  poll();
 
-  // Retorna função de cleanup
+  // Define intervalo baseado no estado após primeira resposta
+  // (poll() já definirá o intervalo correto, mas garantimos cleanup)
+  intervalId = setInterval(poll, SLOW_POLL);
+
   return () => {
     if (intervalId) clearInterval(intervalId);
   };
@@ -209,7 +225,7 @@ function switchTab(tabName, btnSelector = ".nav-item") {
   document.querySelectorAll(btnSelector).forEach(btn => btn.classList.remove("active"));
   document.querySelectorAll(".tab-content").forEach(tab => tab.classList.add("hidden"));
 
-  const activeBtn = document.querySelector(`[onclick="showTab('${tabName}')"]`);
+  const activeBtn = document.getElementById(`nav${tabName.charAt(0).toUpperCase()}${tabName.slice(1)}`);
   if (activeBtn) activeBtn.classList.add("active");
   document.getElementById(tabName)?.classList.remove("hidden");
 }
@@ -329,22 +345,36 @@ function scheduleExactTime(baseUrl, timePickerEl, pin, onResult) {
 function loadQRCode(baseUrl, qrImg, linkEl, openFn) {
   getCachedIP(baseUrl, "/ip", "ipv4")
     .then(data => {
+      console.log("[loadQRCode] data:", data);
       const url = data.url;
+      if (!url) {
+        throw new Error("URL vazia na resposta da API");
+      }
       if (qrImg) {
+        console.log("[loadQRCode] setando qrImg.src");
         qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
       }
       if (linkEl) {
         linkEl.textContent = url;
         linkEl.href = "#";
         linkEl.style.cursor = "pointer";
-        linkEl.onclick = (e) => {
+        // CSP-compliant: remove inline handler, use addEventListener
+        // Remove listener anterior se existir para evitar accumulation
+        const newListener = (e) => {
           e.preventDefault();
           if (openFn) openFn(url);
         };
+        // Armazena listener no elemento para remoção futura
+        if (linkEl._shutdwQrListener) {
+          linkEl.removeEventListener("click", linkEl._shutdwQrListener);
+        }
+        linkEl.addEventListener("click", newListener);
+        linkEl._shutdwQrListener = newListener;
       }
     })
-    .catch(() => {
-      if (linkEl) linkEl.textContent = "Erro ao carregar";
+    .catch(err => {
+      console.error("[loadQRCode] erro completo:", err);
+      if (linkEl) linkEl.textContent = "Erro ao carregar: " + (err.message || String(err));
     });
 }
 
@@ -371,10 +401,17 @@ function loadQRIpv6(baseUrl, qrImg, linkEl, openFn) {
         linkEl.textContent = url;
         linkEl.href = "#";
         linkEl.style.cursor = "pointer";
-        linkEl.onclick = (e) => {
+        // CSP-compliant: remove inline handler, use addEventListener
+        // Remove listener anterior se existir para evitar accumulation
+        const newListener = (e) => {
           e.preventDefault();
           if (openFn) openFn(url);
         };
+        if (linkEl._shutdwQrListener) {
+          linkEl.removeEventListener("click", linkEl._shutdwQrListener);
+        }
+        linkEl.addEventListener("click", newListener);
+        linkEl._shutdwQrListener = newListener;
       }
     })
     .catch(() => {
