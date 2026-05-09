@@ -39,12 +39,28 @@ app.use((req, res, next) => {
 // CORS restrito: permite apenas localhost (desktop app)
 // A interface web remota é servida pelo mesmo servidor, então origin será file:// ou null
 // Na prática, para app desktop, o origin é app://localhost ou http://localhost:3333
+const allowedOrigins = ["http://localhost:3333", "app://localhost", "file://"];
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  const allowedOrigins = ["http://localhost:3333", "app://localhost", "file://"];
+
+  // Rejeitar origins não permitidas
   if (origin && !allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+    logger.warn("CORS blocked — origin not allowed", { origin });
     return res.status(403).json({ error: "Origin not allowed" });
   }
+
+  // Resposta para preflight (OPTIONS)
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Pin");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Max-Age", "86400"); // 24h cache
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
+    return res.status(204).end();
+  }
+
+  // Headers para requisições reais
   res.setHeader("Access-Control-Allow-Origin", origin || "*");
   res.setHeader("Access-Control-Allow-Credentials", "true");
   next();
