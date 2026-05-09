@@ -2,8 +2,12 @@ const { app, BrowserWindow, Tray, Menu, dialog, ipcMain, shell, Notification } =
 const { autoUpdater } = require("electron-updater");
 const { hashPin } = require("./server/auth");
 const { loadConfig, saveConfig } = require("./server/config");
+const { createLogger } = require("./logger");
 const path = require("path");
 const http = require("http");
+
+// Logger com contexto "main"
+const logger = createLogger("main");
 
 // Ícone correto por plataforma (.ico para Windows, .png para Linux/macOS)
 const iconExt = process.platform === "win32" ? "ico" : "png";
@@ -132,7 +136,7 @@ function createTray() {
  */
 function triggerShutdown(minutes) {
   const req = http.request({ hostname: "localhost", port: 3333, path: `/shutdown/${minutes}`, method: "POST" });
-  req.on("error", (err) => console.error("Erro ao agendar pelo tray:", err));
+  req.on("error", (err) => logger.error("Erro ao agendar pelo tray", { error: err.message, stack: err.stack }));
   req.end();
 }
 
@@ -141,7 +145,7 @@ function triggerShutdown(minutes) {
  */
 function triggerCancel() {
   const req = http.request({ hostname: "localhost", port: 3333, path: "/cancel", method: "POST" });
-  req.on("error", (err) => console.error("Erro ao cancelar pelo tray:", err));
+  req.on("error", (err) => logger.error("Erro ao cancelar pelo tray", { error: err.message, stack: err.stack }));
   req.end();
 }
 
@@ -160,7 +164,7 @@ function sendUpdateEvent(event, data = {}) {
 
 function setupAutoUpdater() {
   if (!app.isPackaged) {
-    console.log("Auto-updates disabled in development");
+    logger.info("Auto-updates disabled in development");
     return;
   }
 
@@ -196,7 +200,7 @@ function setupAutoUpdater() {
   });
 
   autoUpdater.on("error", (err) => {
-    console.error("AutoUpdater error:", err);
+    logger.error("AutoUpdater error", { error: err.message, stack: err.stack });
     sendUpdateEvent("error", { message: err.message });
   });
 
@@ -219,9 +223,10 @@ function setupIpcHandlers() {
       const cfg = loadConfig();
       cfg.pin = hash;
       saveConfig(cfg);
+      logger.info("PIN redefinido com sucesso");
       return { status: "PIN redefinido com sucesso" };
     } catch (err) {
-      console.error("Erro ao redefinir PIN:", err);
+      logger.error("Erro ao redefinir PIN", { error: err.message, stack: err.stack });
       return { error: "Erro ao redefinir PIN" };
     }
   });
@@ -256,9 +261,10 @@ function setupIpcHandlers() {
       }
 
       await shell.openExternal(parsedUrl.toString());
+      logger.info("Link externo aberto", { url: parsedUrl.toString() });
       return { success: true };
     } catch (err) {
-      console.error("Erro ao abrir link externo:", err);
+      logger.error("Erro ao abrir link externo", { error: err.message, stack: err.stack });
       return { error: "URL inválida" };
     }
   });
@@ -302,10 +308,45 @@ if (!gotTheLock) {
 // APP START
 // ============================================================================
 app.whenReady().then(() => {
+  logger.info("ShutDW iniciando", { version: app.getVersion(), platform: process.platform });
   require("./server/webServer");
   Menu.setApplicationMenu(null);
   createWindow();
   createTray();
   setupIpcHandlers();
   setupAutoUpdater();
+  logger.info("ShutDW iniciado com sucesso");
+});
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    logger.info("Todas as janelas fechadas, app continuando em background");
+  }
+});
+
+app.on("before-quit", () => {
+  logger.info("ShutDW encerrando");
+});
+
+// ============================================================================
+// GLOBAL ERROR HANDLERS
+// ============================================================================
+// Captura exceções não tratadas e rejeições de promises
+process.on("uncaughtException", (err) => {
+  logger.error("Exceção não capturada (uncaughtException)", {
+    error: err.message,
+    stack: err.stack
+  });
+  // Aguarda um momento para logar antes de encerrar
+  setTimeout(() => process.exit(1), 100);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error("Promise rejeitada sem tratamento (unhandledRejection)", {
+    reason: reason?.message || reason,
+    stack: reason?.stack,
+    promise: String(promise)
+  });
+  // Aguarda um momento para logar antes de encerrar
+  setTimeout(() => process.exit(1), 100);
 });

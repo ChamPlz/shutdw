@@ -5,6 +5,10 @@ const path = require("path");
 const { loadConfig } = require("./config");
 const { cancelShutdown } = require("./shutdown");
 const { createRoutes, PORT } = require("./routes");
+const { createLogger } = require("../logger");
+
+// Logger com contexto "server"
+const logger = createLogger("server");
 
 // ============================================================================
 // CONFIG & STATE
@@ -47,6 +51,30 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+
+// Logging middleware — log todas requisições (sem bodies por segurança)
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    const logData = {
+      method: req.method,
+      path: req.path,
+      status: res.statusCode,
+      duration: `${duration}ms`,
+      ip: req.ip,
+    };
+    if (res.statusCode >= 500) {
+      logger.error("Request error", logData);
+    } else if (res.statusCode >= 400) {
+      logger.warn("Request warning", logData);
+    } else {
+      logger.info("Request handled", logData);
+    }
+  });
+  next();
+});
+
 app.use(express.static(path.join(__dirname, "../web")));
 app.use(express.static(path.join(__dirname, "../shared")));
 
@@ -90,11 +118,40 @@ app.use(createRoutes(config));
 // ============================================================================
 process.on("cancel-shutdown", () => cancelShutdown(config));
 
+// Error handlers globais para o processo do servidor
+process.on("uncaughtException", (err) => {
+  logger.error("Server uncaughtException", {
+    error: err.message,
+    stack: err.stack
+  });
+  setTimeout(() => process.exit(1), 100);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error("Server unhandledRejection", {
+    reason: reason?.message || reason,
+    stack: reason?.stack,
+    promise: String(promise)
+  });
+  setTimeout(() => process.exit(1), 100);
+});
+
 // ============================================================================
 // START
 // ============================================================================
+// Error handler — captura erros não tratados nas rotas
+app.use((err, req, res, next) => {
+  logger.error("Unhandled error", {
+    error: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+  });
+  res.status(500).json({ error: "Erro interno do servidor" });
+});
+
 app.listen(PORT, () => {
-  console.log(`Servidor web rodando em http://localhost:${PORT}`);
+  logger.info("Servidor web iniciado", { port: PORT, url: `http://localhost:${PORT}` });
 });
 
 module.exports = app;
