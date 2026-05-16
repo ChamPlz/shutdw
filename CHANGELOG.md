@@ -2,6 +2,12 @@
 ## Change Log
 ### Próxima Versão
 
+---
+
+# 1.2.1
+## Change Log
+### Version v1.2.1 - 2026-05-16
+
 #### Fixed
 - **Botão "Remoto" persiste após desativar IPv6**
   - Adiciona `clearLocalIPCache("ipv6")` em `shared/api.js`
@@ -18,6 +24,66 @@
   - Intervalo dinâmico: 5s ocioso → 1s quando shutdown ativo (`remaining > 0`)
   - Pausa automática via `visibilitychange` quando a janela/aba não está visível (economiza CPU e bateria)
   - Correção de estado: só considera ativo quando `remaining > 0`, evitando polling desnecessário após o timer zerar
+
+---
+
+# 1.2.0
+## Change Log
+### Version v1.2.0 - 2026-05-09 — Security Hardening & Observability Release
+
+#### Security
+- **Content Security Policy (CSP)** implementado em todas as interfaces
+  - Desktop, web remote e overlay com CSP rigoroso
+  - Previne XSS e injeção de scripts maliciosos
+- **Security headers** adicionados em todas as respostas HTTP
+  - `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection`, `Referrer-Policy`
+  - `Permissions-Policy` bloqueando APIs sensíveis (geolocation, microphone, camera, payment, USB, etc.)
+- **CORS hardening** com origin allowlist dinâmica
+  - Inclui IP local da rede detectado automaticamente
+  - Preflight OPTIONS com cache de 24 horas
+  - Bloqueio de origins não permitidas com 403
+- **PIN input hardening**
+  - `inputmode="numeric"`, `pattern="[0-9]*"`, `maxlength="20"`, `autocomplete="off"`
+  - Validação em tempo real, proteção contra paste malicioso, feedback visual CSS
+- **Rate limiting diferenciado**
+  - Leitura: 120 req/min, Ação: 20 req/min, Autenticação: 5 req/min
+- **Graceful shutdown** do servidor Express
+  - `server.close()` + draining de conexões + timeout de 10s
+  - Handlers SIGTERM/SIGINT configurados
+- **Overlay CSP compliant**
+  - Event listeners injetados via `executeJavaScript` após page load
+  - Remove inline handlers para compatibilidade com CSP
+- **Remoção de sistema de telemetria Sentry**
+  - Elimina envio de dados de diagnóstico para serviços externos
+
+#### Performance
+- **Cache de IP/QR code double-layer**
+  - Server-side: Map com TTL de 5 minutos
+  - Client-side: localStorage + timestamp (funciona offline entre recargas)
+- **Centralização de constantes** em `shared/constants.js`
+  - Elimina magic numbers em toda a base de código
+
+#### Observability
+- **Logging estruturado** com winston + winston-daily-rotate-file
+  - Logs diários com rotação automática (14 dias normais, 30 dias erros)
+  - Contexto estruturado: timestamp, level, componente, action
+  - Request logging com IP, método, rota, duração e status code
+  - Handlers globais para `uncaughtException` e `unhandledRejection`
+
+#### Fixed
+- **3 blockers críticos de runtime** corrigidos
+- **Memory leaks no overlay**: prevent IPC listener accumulation
+- **Memory leaks no renderer/web**: polling cleanup on page unload
+- **Event listener accumulation** em links de QR code
+- **Graceful shutdown timer** limpo em todos os caminhos de saída
+- **TypeScript annotations** removidas de `webServer.js`
+
+#### Developer Experience
+- **Test suite** adicionada (Jest + SuperTest)
+  - 18 testes unitários cobrindo auth e rate limiting
+- **CI/CD**
+  - GitHub Actions workflow para validação de PRs
+  - Dependabot configurado para atualizações automáticas de dependências
 
 ---
 
