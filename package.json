@@ -1,6 +1,6 @@
 {
   "name": "shutdw",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "App Electron para desligar/reiniciar o Windows com acesso web",
   "main": "main.js",
   "author": {
