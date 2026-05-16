@@ -2,6 +2,12 @@
 ## Change Log
 ### Próxima Versão
 
+#### Fixed
+- **Flash duplo ao restaurar da tray** (fixes #8)
+  - Substitui `win.hide()` por `win.minimize()` no handler de close — mantém a superfície DWM "quente", evitando recriação branca ao restaurar
+  - Move `setSkipTaskbar(true)` antes do `minimize()` para evitar aparição breve na taskbar
+  - Remove `win.focus()` redundante de `restoreWindow()` — `show()` e `restore()` já ativam a janela; o focus extra causava o segundo flash
+
 #### Performance
 - **Polling de status otimizado** (`shared/api.js`)
   - Substitui `setInterval` por `setTimeout` recursivo — evita requisições paralelas caso o servidor demore mais que o intervalo

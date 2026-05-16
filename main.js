@@ -43,7 +43,8 @@ function restoreWindow() {
   }
 
   win.setSkipTaskbar(false);
-  win.focus();
+  // Nota: show() e restore() ja ativam/focam a janela;
+  // focus() redundante causava flash duplo em janelas transparentes (issue #8)
 }
 
 /**
@@ -94,8 +95,8 @@ function createWindow() {
   win.on("close", (e) => {
     if (!allowQuit) {
       e.preventDefault();
-      win.hide();
       win.setSkipTaskbar(true);
+      win.minimize();
     }
   });
 }
