@@ -32,6 +32,22 @@ function getLocalIPCache(key) {
 }
 
 /**
+ * Limpa um entry específico do cache de IP local
+ * @param {string} key - "ipv4" ou "ipv6"
+ */
+function clearLocalIPCache(key) {
+  try {
+    const raw = localStorage.getItem(QR_CACHE_KEY);
+    if (!raw) return;
+    const cache = JSON.parse(raw);
+    delete cache[key];
+    localStorage.setItem(QR_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // localStorage indisponível
+  }
+}
+
+/**
  * Salva dados de IP na localStorage com timestamp
  * @param {string} key - "ipv4" ou "ipv6"
  * @param {object} data - Dados da resposta

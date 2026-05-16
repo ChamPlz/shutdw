@@ -3,6 +3,10 @@
 ### Próxima Versão
 
 #### Fixed
+- **Botão "Remoto" persiste após desativar IPv6**
+  - Adiciona `clearLocalIPCache("ipv6")` em `shared/api.js`
+  - `toggleIPv6(false)` agora limpa o cache local e esconde o botão "Remoto" imediatamente
+  - Volta automaticamente para a aba "Local" se o usuário estiver na aba remota
 - **Flash duplo ao restaurar da tray** (fixes #8)
   - Substitui `win.hide()` por `win.minimize()` no handler de close — mantém a superfície DWM "quente", evitando recriação branca ao restaurar
   - Move `setSkipTaskbar(true)` antes do `minimize()` para evitar aparição breve na taskbar

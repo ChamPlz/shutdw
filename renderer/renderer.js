@@ -292,7 +292,13 @@ function toggleIPv6(enabled) {
             : "IPv6 desabilitado - sem acesso remoto via IPv6";
           el.ipv6StatusText.style.color = "#27ae60";
         }
-        loadIPv6Link();
+        if (data.useIPv6) {
+          loadIPv6Link();
+        } else {
+          clearLocalIPCache("ipv6");
+          if (el.qrRemotoBtn) el.qrRemotoBtn.style.display = "none";
+          showQRCode("local");
+        }
       }
     })
     .catch(() => {
