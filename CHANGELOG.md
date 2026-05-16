@@ -1,3 +1,16 @@
+# Unreleased
+## Change Log
+### Próxima Versão
+
+#### Performance
+- **Polling de status otimizado** (`shared/api.js`)
+  - Substitui `setInterval` por `setTimeout` recursivo — evita requisições paralelas caso o servidor demore mais que o intervalo
+  - Intervalo dinâmico: 5s ocioso → 1s quando shutdown ativo (`remaining > 0`)
+  - Pausa automática via `visibilitychange` quando a janela/aba não está visível (economiza CPU e bateria)
+  - Correção de estado: só considera ativo quando `remaining > 0`, evitando polling desnecessário após o timer zerar
+
+---
+
 # 1.1.10
 ## Change Log
 ### Version v1.1.10 - 2026-05-08 — Security Hardening Release

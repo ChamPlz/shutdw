@@ -151,33 +151,45 @@ function updateTimer(timerEl, containerEl, remaining) {
 
 /**
  * Inicia polling de status com backoff inteligente
+ * Usa setTimeout recursivo para evitar requisições paralelas
+ * e pausa quando a aba/janela não está visível
  * @param {string} baseUrl
  * @param {HTMLElement} timerEl
  * @param {HTMLElement} containerEl
  * @returns {function} Função de cleanup
  */
 function startStatusPolling(baseUrl, timerEl, containerEl) {
-  let intervalId = null;
+  let timeoutId = null;
   let hasActiveShutdown = false;
+  let isVisible = true;
   const FAST_POLL = 1000;
   const SLOW_POLL = 5000;
 
+  function scheduleNext(delay) {
+    timeoutId = setTimeout(poll, delay);
+  }
+
   function poll() {
+    if (!isVisible) {
+      // Pausa polling enquanto não visível; agenda verificação em 1s
+      timeoutId = setTimeout(poll, 1000);
+      return;
+    }
+
     apiRequest(baseUrl, "/status")
       .then(data => {
         updateTimer(timerEl, containerEl, data.remaining);
 
-        const isActive = data.remaining != null;
+        const isActive = data.remaining != null && data.remaining > 0;
 
-        // Transição only when state changes
         if (isActive && !hasActiveShutdown) {
           hasActiveShutdown = true;
-          clearInterval(intervalId);
-          intervalId = setInterval(poll, FAST_POLL);
+          scheduleNext(FAST_POLL);
         } else if (!isActive && hasActiveShutdown) {
           hasActiveShutdown = false;
-          clearInterval(intervalId);
-          intervalId = setInterval(poll, SLOW_POLL);
+          scheduleNext(SLOW_POLL);
+        } else {
+          scheduleNext(isActive ? FAST_POLL : SLOW_POLL);
         }
       })
       .catch(() => {
@@ -185,18 +197,22 @@ function startStatusPolling(baseUrl, timerEl, containerEl) {
           timerEl.textContent = "";
           timerEl.classList.add("hidden");
         }
+        scheduleNext(SLOW_POLL);
       });
   }
 
-  // Primeira execução imediata para detectar estado inicial
-  poll();
+  function handleVisibilityChange() {
+    isVisible = !document.hidden;
+  }
 
-  // Define intervalo baseado no estado após primeira resposta
-  // (poll() já definirá o intervalo correto, mas garantimos cleanup)
-  intervalId = setInterval(poll, SLOW_POLL);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  // Primeira execução imediata
+  scheduleNext(0);
 
   return () => {
-    if (intervalId) clearInterval(intervalId);
+    if (timeoutId) clearTimeout(timeoutId);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
   };
 }
 
