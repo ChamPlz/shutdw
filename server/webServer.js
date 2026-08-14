@@ -3,7 +3,7 @@ const { rateLimit } = require("express-rate-limit");
 const path = require("path");
 
 const { loadConfig } = require("./config");
-const { cancelShutdown } = require("./shutdown");
+const { cancelShutdown, restorePendingShutdown } = require("./shutdown");
 const { createRoutes } = require("./routes");
 const { createLogger } = require("../logger");
 const {
@@ -12,10 +12,11 @@ const {
   RATE_LIMIT_READ_MAX,
   RATE_LIMIT_ACTION_MAX,
   RATE_LIMIT_AUTH_MAX,
-  CORS_PREFLIGHT_MAX_AGE,
+  CORS_ALLOWED_ORIGINS,
   GRACEFUL_SHUTDOWN_TIMEOUT,
 } = require("../shared/constants");
 const { getOutboundIp } = require("./network");
+const { createCorsMiddleware } = require("./cors");
 
 // Logger com contexto "server"
 const logger = createLogger("server");
@@ -24,11 +25,18 @@ const logger = createLogger("server");
 // CONFIG & STATE
 // ============================================================================
 const config = loadConfig();
+
+// Restaura um agendamento pendente após reinício do app (BUG-06)
+if (restorePendingShutdown(config)) {
+  logger.info("Agendamento pendente restaurado após reinício", {
+    scheduledAt: config.scheduledAt,
+  });
+}
 // Referência ao http.Server para graceful shutdown
 let server = null;
 
 // Origens CORS permitidas — dinâmica pois inclui IP local da rede
-let allowedOrigins = ["http://localhost:" + PORT, "app://localhost", "file://"];
+let allowedOrigins = [...CORS_ALLOWED_ORIGINS];
 
 // Descobre o IP local da máquina na inicialização e adiciona às origens permitidas
 getOutboundIp(500)
@@ -75,31 +83,8 @@ app.use((req, res, next) => {
 // - app://localhost (Electron preload)
 // - file:// (web local)
 // - http://<IP-da-rede>:3333 (acesso remoto via QR code)
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-
-  // Rejeitar origins não permitidas
-  if (origin && !allowedOrigins.some(allowed => origin.startsWith(allowed))) {
-    logger.warn("CORS blocked — origin not allowed", { origin, allowedOrigins });
-    return res.status(403).json({ error: "Origin not allowed" });
-  }
-
-  // Resposta para preflight (OPTIONS)
-  if (req.method === "OPTIONS") {
-    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Pin");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Max-Age", CORS_PREFLIGHT_MAX_AGE);
-    res.setHeader("Access-Control-Allow-Origin", origin || "*");
-    return res.status(204).end();
-  }
-
-  // Headers para requisições reais
-  res.setHeader("Access-Control-Allow-Origin", origin || "*");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  next();
-});
+// Requisições same-origin (incluindo IPv6) são sempre permitidas.
+app.use(createCorsMiddleware(allowedOrigins));
 
 app.use(express.json());
 

@@ -56,8 +56,9 @@ function loadConfig() {
   ensureConfigDir();
 
   if (!fs.existsSync(configPath)) {
-    saveConfig(defaultConfig);
-    return { ...defaultConfig };
+    configCache = validateConfig(defaultConfig);
+    saveConfig(configCache);
+    return configCache;
   }
 
   try {
@@ -84,7 +85,13 @@ function saveConfig(config) {
     JSON.stringify(validatedConfig, null, 2),
     "utf-8"
   );
-  configCache = validatedConfig; // Invalida/atualiza cache
+  // Muta o cache existente in place para preservar a mesma referência para
+  // todos os callers (webServer, routes, tray) — evita objetos defasados.
+  if (configCache) {
+    Object.assign(configCache, validatedConfig);
+  } else {
+    configCache = validatedConfig;
+  }
 }
 
 module.exports = {

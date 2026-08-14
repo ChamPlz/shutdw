@@ -9,7 +9,32 @@ const {
   EXEC_TIMEOUT,
   QR_CACHE_TTL,
   PORT,
+  PIN_MIN_LENGTH,
+  PIN_MAX_LENGTH,
 } = require("../shared/constants");
+
+// ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Normaliza o IP para lidar com endereços dual-stack (IPv4-mapped IPv6).
+ * Ex: "::ffff:127.0.0.1" → "127.0.0.1"
+ * @param {string} ip
+ * @returns {string}
+ */
+function normalizeIp(ip) {
+  return ip && ip.startsWith("::ffff:") ? ip.slice(7) : ip;
+}
+
+/**
+ * Valida um horário no formato HH:MM (24h)
+ * @param {string} time
+ * @returns {boolean}
+ */
+function isValidTime(time) {
+  return typeof time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
+}
 
 // ============================================================================
 // QR CODE CACHE
@@ -42,7 +67,8 @@ function createRoutes(config) {
   // MIDDLEWARE — Bloqueio de IPv6
   // ==========================================================================
   router.use((req, res, next) => {
-    if (req.ip === '::1') return next();
+    const ip = normalizeIp(req.ip);
+    if (ip === '::1') return next();
     if (!config.useIPv6 && isIPv6(req.ip)) {
       return res.status(403).json({ error: "Acesso via IPv6 desabilitado" });
     }
@@ -78,11 +104,6 @@ function createRoutes(config) {
     }
 
     try {
-      // Localhost liberado (exceto /shutdown)
-      if ((req.ip === '::1' || req.ip === '127.0.0.1') && req.path !== '/shutdown') {
-        return next();
-      }
-
       // Verificação com hash Argon2
       if (auth.isHash(stored)) {
         const ok = await auth.verifyPin(stored, provided);
@@ -162,8 +183,11 @@ function createRoutes(config) {
 
   router.post("/config/pin", async (req, res) => {
     const { newPin } = req.body;
-    if (!newPin || typeof newPin !== 'string' || newPin.length < 4) {
+    if (!newPin || typeof newPin !== 'string' || newPin.length < PIN_MIN_LENGTH) {
       return res.status(400).json({ error: "PIN inválido" });
+    }
+    if (newPin.length > PIN_MAX_LENGTH) {
+      return res.status(400).json({ error: "PIN muito longo" });
     }
     try {
       config.pin = await auth.hashPin(newPin);
@@ -188,12 +212,20 @@ function createRoutes(config) {
 
   router.post("/shutdown/:minutes", (req, res) => {
     const minutes = Number(req.params.minutes);
-    scheduleShutdown(Date.now() + minutes * 60000, config);
+    const timestamp = Date.now() + minutes * 60000;
+    if (!Number.isFinite(minutes) || minutes <= 0 || !Number.isFinite(timestamp)) {
+      return res.status(400).json({ error: "Minutos inválidos" });
+    }
+    scheduleShutdown(timestamp, config);
     res.json({ status: `Desligamento em ${minutes} minutos` });
   });
 
   router.post("/schedule", (req, res) => {
     const { time } = req.body;
+    if (!isValidTime(time)) {
+      return res.status(400).json({ error: "Horário inválido (use HH:MM)" });
+    }
+
     const [h, m] = time.split(":").map(Number);
 
     const date = new Date();

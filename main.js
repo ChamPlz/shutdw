@@ -2,9 +2,9 @@ const { app, BrowserWindow, Tray, Menu, dialog, ipcMain, shell, Notification } =
 const { autoUpdater } = require("electron-updater");
 const { hashPin } = require("./server/auth");
 const { loadConfig, saveConfig } = require("./server/config");
+const { scheduleShutdown, cancelShutdown } = require("./server/shutdown");
 const { createLogger } = require("./logger");
 const path = require("path");
-const http = require("http");
 
 // Logger com contexto "main"
 const logger = createLogger("main");
@@ -135,21 +135,19 @@ function createTray() {
 }
 
 /**
- * Dispara agendamento de shutdown via requisição local
+ * Dispara agendamento de shutdown direto pelo módulo (sem HTTP, sem PIN)
  */
 function triggerShutdown(minutes) {
-  const req = http.request({ hostname: "localhost", port: 3333, path: `/shutdown/${minutes}`, method: "POST" });
-  req.on("error", (err) => logger.error("Erro ao agendar pelo tray", { error: err.message, stack: err.stack }));
-  req.end();
+  const cfg = loadConfig();
+  scheduleShutdown(Date.now() + minutes * 60000, cfg);
 }
 
 /**
- * Cancela o agendamento via requisição local
+ * Cancela o agendamento direto pelo módulo (sem HTTP, sem PIN)
  */
 function triggerCancel() {
-  const req = http.request({ hostname: "localhost", port: 3333, path: "/cancel", method: "POST" });
-  req.on("error", (err) => logger.error("Erro ao cancelar pelo tray", { error: err.message, stack: err.stack }));
-  req.end();
+  const cfg = loadConfig();
+  cancelShutdown(cfg);
 }
 
 // ============================================================================

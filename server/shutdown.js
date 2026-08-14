@@ -15,19 +15,21 @@ let shutdownTimer = null;
  * @param {object} config - Referência ao objeto de configuração
  */
 function scheduleShutdown(timestamp, config) {
+  // Valida o timestamp ANTES de tocar no timer ativo ou cancelar o shutdown do SO,
+  // para que um timestamp inválido/não-futuro NÃO destrua um agendamento existente.
+  const delay = timestamp - Date.now();
+  if (!Number.isFinite(delay) || delay <= 0) return false;
+
   // Limpa o timer atual se existir, mas NÃO fecha o overlay para reaproveitá-lo
   if (shutdownTimer) {
     clearInterval(shutdownTimer);
     shutdownTimer = null;
   }
-  
+
   // Tenta cancelar algum desligamento do SO pendente
   exec(platform.cancelSystemShutdown(), { timeout: EXEC_TIMEOUT }, (err) => {
     if (err && err.killed) console.warn("Comando de cancelamento de shutdown timeout");
   });
-
-  const delay = timestamp - Date.now();
-  if (delay <= 0) return;
 
   createOverlay();
 
@@ -51,6 +53,28 @@ function scheduleShutdown(timestamp, config) {
 
   config.scheduledAt = timestamp;
   saveConfig(config);
+  return true;
+}
+
+/**
+ * Restaura um agendamento pendente após reinício do app.
+ * Re-agenda o desligamento se `scheduledAt` estiver no futuro.
+ * @param {object} config - Referência ao objeto de configuração
+ * @returns {boolean} True se um agendamento pendente foi restaurado
+ */
+function restorePendingShutdown(config) {
+  const scheduledAt = config.scheduledAt;
+  if (typeof scheduledAt !== "number" || !Number.isFinite(scheduledAt)) {
+    return false;
+  }
+  if (scheduledAt <= Date.now()) {
+    // Timestamp expirado: limpa o agendamento fantasma para o /status não reportar
+    // um agendamento pendente que nunca vai acontecer.
+    config.scheduledAt = null;
+    saveConfig(config);
+    return false;
+  }
+  return scheduleShutdown(scheduledAt, config);
 }
 
 /**
@@ -74,4 +98,5 @@ function cancelShutdown(config) {
 module.exports = {
   scheduleShutdown,
   cancelShutdown,
+  restorePendingShutdown,
 };
