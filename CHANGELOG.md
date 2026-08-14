@@ -4,6 +4,33 @@
 
 ---
 
+# 1.3.0
+## Change Log
+### Version v1.3.0 - 2026-08-14 — Robustez, Segurança & Electron 43
+
+#### Security
+- **Bugs P0 corrigidos (fixes #14, PR #15)** — revisão completa (arquitetura + produto + implementação)
+  - **Input validation**: `/shutdown/:minutes` e `/schedule` agora rejeitam valores inválidos (NaN, passado, `HH:MM` fora de 00–59/00–23) — elimina overlay travado em `NaN:NaN`
+  - **CORS same-origin IPv6**: middleware extraído (`server/cors.js`), comparação exata de origin e suporte a `http://[fe80::1]:3333` — acesso remoto via IPv6 volta a funcionar
+  - **Dual-stack**: IPs `::ffff:` normalizados nos middlewares IPv6
+  - **Fim do bypass de localhost**: todas as rotas destrutivas exigem PIN válido de qualquer origem (inclui `/config/pin` e `/shutdown/:minutes`)
+  - **Modal web**: remoção de `style="display:none"` inline que impedia a criação do PIN na interface web
+  - **Restauração no boot**: `restorePendingShutdown` re-agenda desligamentos futuros persistidos e limpa agendamentos expirados (sem phantom de 0s no `/status`)
+  - **Validação antes de agir**: `scheduleShutdown` valida o timestamp antes de limpar timer/cancelar shutdown do SO — um NaN não destrói um agendamento ativo
+- **`electron` atualizado para 43.4.0** — corrige `extract-zip` (GHSA-jmr9-qjv8-65gv) e sandboxed iframe (GHSA-9f4c-93c8-jc8g); `npm audit` reporta **0 vulnerabilidades**
+- **Cache de configuração**: `loadConfig`/`saveConfig` preservam a mesma referência em memória (`server/config.js`) — `/status` sempre reflete o `scheduledAt` mais recente do tray
+- Dependências de produção atualizadas: `express@4.22.2`, `electron-updater@6.8.9`, `builder-util-runtime@9.7.0`, `ip-address@10.5.0`, `js-yaml@4.3.1`
+
+#### Developer Experience
+- **Suíte de testes ampliada para 55 testes** (7 suites)
+  - `__tests__/shutdown.test.js` — validação de timestamp, restauração no boot, preservação de agendamento ativo
+  - `__tests__/routes.test.js` — validação de rotas, `HH:MM` estrito, timestamp não-finito
+  - `__tests__/cors.test.js` — CORS same-origin IPv4/IPv6, preflight e 403
+  - `__tests__/config.test.js` — referência estável do cache de configuração
+- CI restaurado para auditar todas as dependências (dev incluído)
+
+---
+
 # 1.2.1
 ## Change Log
 ### Version v1.2.1 - 2026-05-16
