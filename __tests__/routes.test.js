@@ -89,6 +89,15 @@ describe("routes.js — validação de input (BUG-01)", () => {
       expect(Number.isFinite(timestamp)).toBe(true);
       expect(timestamp).toBeGreaterThan(Date.now());
     });
+
+    test("rejeita minutos que produzem timestamp não-finito com 400", async () => {
+      const res = await request(app)
+        .post("/shutdown/1e308")
+        .set("x-pin", "1234");
+
+      expect(res.status).toBe(400);
+      expect(shutdown.scheduleShutdown).not.toHaveBeenCalled();
+    });
   });
 
   describe("/schedule", () => {
@@ -133,6 +142,56 @@ describe("routes.js — validação de input (BUG-01)", () => {
       const timestamp = shutdown.scheduleShutdown.mock.calls[0][0];
       expect(Number.isFinite(timestamp)).toBe(true);
       expect(timestamp).toBeGreaterThan(Date.now());
+    });
+
+    test("aceita horário limite 23:59 e agenda", async () => {
+      const res = await request(app)
+        .post("/schedule")
+        .set("x-pin", "1234")
+        .send({ time: "23:59" });
+
+      expect(res.status).toBe(200);
+      expect(shutdown.scheduleShutdown).toHaveBeenCalledTimes(1);
+    });
+
+    test("aceita horário com hora de 2 dígitos (09:30) e agenda", async () => {
+      const res = await request(app)
+        .post("/schedule")
+        .set("x-pin", "1234")
+        .send({ time: "09:30" });
+
+      expect(res.status).toBe(200);
+      expect(shutdown.scheduleShutdown).toHaveBeenCalledTimes(1);
+    });
+
+    test("rejeita hora com 1 dígito (1:00) com 400 — formato HH:MM", async () => {
+      const res = await request(app)
+        .post("/schedule")
+        .set("x-pin", "1234")
+        .send({ time: "1:00" });
+
+      expect(res.status).toBe(400);
+      expect(shutdown.scheduleShutdown).not.toHaveBeenCalled();
+    });
+
+    test("rejeita hora 24:00 com 400", async () => {
+      const res = await request(app)
+        .post("/schedule")
+        .set("x-pin", "1234")
+        .send({ time: "24:00" });
+
+      expect(res.status).toBe(400);
+      expect(shutdown.scheduleShutdown).not.toHaveBeenCalled();
+    });
+
+    test("rejeita minutos 12:60 com 400", async () => {
+      const res = await request(app)
+        .post("/schedule")
+        .set("x-pin", "1234")
+        .send({ time: "12:60" });
+
+      expect(res.status).toBe(400);
+      expect(shutdown.scheduleShutdown).not.toHaveBeenCalled();
     });
   });
 });

@@ -33,7 +33,7 @@ function normalizeIp(ip) {
  * @returns {boolean}
  */
 function isValidTime(time) {
-  return typeof time === "string" && /^([01]?\d|2[0-3]):[0-5]\d$/.test(time);
+  return typeof time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
 }
 
 // ============================================================================
@@ -212,10 +212,11 @@ function createRoutes(config) {
 
   router.post("/shutdown/:minutes", (req, res) => {
     const minutes = Number(req.params.minutes);
-    if (!Number.isFinite(minutes) || minutes <= 0) {
+    const timestamp = Date.now() + minutes * 60000;
+    if (!Number.isFinite(minutes) || minutes <= 0 || !Number.isFinite(timestamp)) {
       return res.status(400).json({ error: "Minutos inválidos" });
     }
-    scheduleShutdown(Date.now() + minutes * 60000, config);
+    scheduleShutdown(timestamp, config);
     res.json({ status: `Desligamento em ${minutes} minutos` });
   });
 
