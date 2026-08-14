@@ -27,7 +27,7 @@ function scheduleShutdown(timestamp, config) {
   });
 
   const delay = timestamp - Date.now();
-  if (delay <= 0) return;
+  if (!Number.isFinite(delay) || delay <= 0) return;
 
   createOverlay();
 
@@ -54,6 +54,21 @@ function scheduleShutdown(timestamp, config) {
 }
 
 /**
+ * Restaura um agendamento pendente após reinício do app.
+ * Re-agenda o desligamento se `scheduledAt` estiver no futuro.
+ * @param {object} config - Referência ao objeto de configuração
+ * @returns {boolean} True se um agendamento pendente foi restaurado
+ */
+function restorePendingShutdown(config) {
+  const scheduledAt = config.scheduledAt;
+  if (typeof scheduledAt !== "number" || !Number.isFinite(scheduledAt) || scheduledAt <= Date.now()) {
+    return false;
+  }
+  scheduleShutdown(scheduledAt, config);
+  return true;
+}
+
+/**
  * Cancela o desligamento agendado
  * @param {object} config - Referência ao objeto de configuração
  */
@@ -74,4 +89,5 @@ function cancelShutdown(config) {
 module.exports = {
   scheduleShutdown,
   cancelShutdown,
+  restorePendingShutdown,
 };
