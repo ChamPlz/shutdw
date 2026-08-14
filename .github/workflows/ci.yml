@@ -41,6 +41,4 @@ jobs:
         run: npm test
 
       - name: Audit dependencies
-        # Vulns dev-only via electron (extract-zip) exigiriam upgrade quebrador 39->43;
-        # o audit aqui cobre dependências de produção (o que é embarcado no app).
-        run: npm audit --omit=dev --audit-level=high
+        run: npm audit --audit-level=high
