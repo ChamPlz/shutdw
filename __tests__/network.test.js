@@ -38,6 +38,11 @@ describe("network.js — helpers de IPv6", () => {
       await expect(network.getPublicIpv6()).resolves.toBeNull();
     });
 
+    test("retorna null quando corpo tem dois-pontos mas não é IPv6 válido", async () => {
+      global.fetch = jest.fn().mockResolvedValue({ ok: true, text: async () => "foo:bar" });
+      await expect(network.getPublicIpv6()).resolves.toBeNull();
+    });
+
     test("retorna null em falha de rede", async () => {
       global.fetch = jest.fn().mockRejectedValue(new TypeError("Failed to fetch"));
       await expect(network.getPublicIpv6()).resolves.toBeNull();
@@ -58,11 +63,11 @@ describe("network.js — helpers de IPv6", () => {
   });
 
   describe("getIPv6Status", () => {
-    test("external quando teste público funciona", async () => {
+    test("outbound quando teste público de saída funciona", async () => {
       const publicLookup = jest.fn().mockResolvedValue("2001:db8::1");
       const outboundLookup = jest.fn();
       await expect(network.getIPv6Status(publicLookup, outboundLookup)).resolves.toEqual({
-        status: "external",
+        status: "outbound",
         publicIp: "2001:db8::1",
       });
       expect(outboundLookup).not.toHaveBeenCalled();

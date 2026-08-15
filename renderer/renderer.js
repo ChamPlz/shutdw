@@ -247,15 +247,15 @@ function setupIPv6Settings() {
     .then(data => {
       if (!el.ipv6Message) return;
 
-      if (data.status === "external") {
-        el.ipv6Message.textContent = "IPv6 disponível para acesso remoto";
+      if (data.status === "outbound") {
+        el.ipv6Message.textContent = "Conectividade IPv6 externa confirmada (saída)";
         el.ipv6Message.style.color = "#27ae60";
         el.ipv6ToggleContainer?.style.setProperty("display", "flex");
         if (el.ipv6Toggle) el.ipv6Toggle.checked = data.enabled;
         if (el.ipv6StatusText) {
           el.ipv6StatusText.textContent = data.enabled
-            ? "✓ IPv6 habilitado - acesso remoto disponível"
-            : "IPv6 desabilitado - sem acesso remoto via IPv6";
+            ? "✓ IPv6 habilitado - conectividade externa confirmada"
+            : "IPv6 desabilitado - sem conectividade externa";
         }
         if (data.enabled) loadIPv6Link();
       } else if (data.status === "local") {
@@ -298,8 +298,8 @@ function toggleIPv6(enabled) {
       } else {
         if (el.ipv6StatusText) {
           el.ipv6StatusText.textContent = data.useIPv6
-            ? "✓ IPv6 habilitado - acesso disponível"
-            : "IPv6 desabilitado - sem acesso remoto via IPv6";
+            ? "✓ IPv6 habilitado"
+            : "IPv6 desabilitado - sem conectividade externa";
           el.ipv6StatusText.style.color = "#27ae60";
         }
         if (data.useIPv6) {
@@ -314,7 +314,7 @@ function toggleIPv6(enabled) {
     .catch(err => {
       if (el.ipv6Toggle) el.ipv6Toggle.checked = !enabled;
       if (el.ipv6StatusText) {
-        el.ipv6StatusText.textContent = err.isHttpError ? err.message : "Erro de conexão";
+        el.ipv6StatusText.textContent = getErrorMessage(err);
         el.ipv6StatusText.style.color = "#e74c3c";
       }
     });

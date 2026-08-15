@@ -163,7 +163,7 @@ function createRoutes(config) {
     if (!ipv6Address) {
       return res.status(404).json({ error: "IPv6 não disponível" });
     }
-    const data = { ipv6: ipv6Address, url: `http://[${ipv6Address}]:${PORT}`, enabled: true, external: status.status === "external" };
+    const data = { ipv6: ipv6Address, url: `http://[${ipv6Address}]:${PORT}`, enabled: true, outbound: status.status === "outbound" };
     setCachedIP("ipv6", data);
     res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=30");
     res.json(data);

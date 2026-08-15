@@ -1,5 +1,6 @@
 const os = require("os");
 const dgram = require("dgram");
+const net = require("node:net");
 
 const IPV6_TEST_ENDPOINT = "https://api6.ipify.org";
 const IPV6_STATUS_TTL = 5 * 60 * 1000;
@@ -93,7 +94,7 @@ async function getPublicIpv6(timeout = 5000) {
     const response = await fetch(IPV6_TEST_ENDPOINT, { signal: controller.signal });
     if (!response.ok) return null;
     const ip = (await response.text()).trim();
-    return isIPv6(ip) ? ip : null;
+    return net.isIP(ip) === 6 ? ip : null;
   } catch {
     return null;
   } finally {
@@ -102,14 +103,15 @@ async function getPublicIpv6(timeout = 5000) {
 }
 
 /**
- * Classifica a disponibilidade de IPv6: externo, apenas local ou indisponível
+ * Classifica a conectividade IPv6: saída externa confirmada, apenas local ou indisponível
+ * Nota: confirma conectividade IPv6 de saída; não verifica reachability inbound (firewall/porta)
  * @param {Function} [publicLookup] - Função do teste externo (injetável p/ teste)
  * @param {Function} [outboundLookup] - Função que devolve endereço de saída (injetável p/ teste)
  * @returns {Promise<{status: string, publicIp?: string, ipv6?: string}>}
  */
 async function getIPv6Status(publicLookup = getPublicIpv6, outboundLookup = getOutboundIpv6) {
   const publicIp = await publicLookup();
-  if (publicIp) return { status: "external", publicIp };
+  if (publicIp) return { status: "outbound", publicIp };
 
   const localIp = await outboundLookup();
   if (localIp && !isLinkLocal(localIp)) return { status: "local", ipv6: localIp };
