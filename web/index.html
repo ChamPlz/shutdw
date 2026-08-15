@@ -151,11 +151,6 @@
           </div>
         </div>
 
-        <!-- Status Display -->
-        <div class="status-container hidden">
-          <p id="timer" class="status-timer"></p>
-          <p id="status" class="status-message"></p>
-        </div>
       </div>
 
       <!-- Config Tab -->
@@ -188,11 +183,13 @@
               Salvar Novo PIN
             </button>
           </div>
-          <p id="configStatus" class="status-message"></p>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Timer flutuante (contagem regressiva) -->
+  <div id="timerToast" class="shutdw-timer-toast hidden"></div>
 
   <script src="api.js"></script>
   <script src="app.js"></script>

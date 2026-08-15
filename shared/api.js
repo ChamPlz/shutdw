@@ -161,6 +161,63 @@ function sendAction(baseUrl, route, pin, onResult) {
 // ============================================================================
 
 /**
+ * Exibe uma mensagem como toast flutuante fixo no canto inferior direito.
+ * @param {string} message
+ * @param {boolean} isError
+ */
+function showToast(message, isError = false) {
+  if (typeof document === "undefined") return;
+
+  const stack = document.querySelector(".shutdw-toast-stack");
+  const container = stack || createToastStack();
+
+  const toast = document.createElement("div");
+  toast.className = `shutdw-toast ${isError ? "error" : "success"}`;
+
+  const text = document.createElement("span");
+  text.className = "shutdw-toast-text";
+  text.textContent = message;
+
+  const close = document.createElement("button");
+  close.className = "shutdw-toast-close";
+  close.type = "button";
+  close.setAttribute("aria-label", "Fechar notificação");
+  close.textContent = "×";
+
+  toast.appendChild(text);
+  toast.appendChild(close);
+
+  container.appendChild(toast);
+
+  const dismiss = () => removeToast(toast);
+  close.addEventListener("click", dismiss);
+  setTimeout(dismiss, isError ? 6000 : 4000);
+
+  trimStack(container);
+}
+
+function createToastStack() {
+  const container = document.createElement("div");
+  container.className = "shutdw-toast-stack";
+  container.setAttribute("aria-live", "polite");
+  document.body.appendChild(container);
+  return container;
+}
+
+function removeToast(toast) {
+  if (!toast || !toast.parentNode) return;
+  toast.classList.add("shutdw-toast-leaving");
+  toast.addEventListener("animationend", () => toast.remove(), { once: true });
+}
+
+function trimStack(container) {
+  while (container.children.length > 5) {
+    const oldest = container.firstElementChild;
+    if (oldest) oldest.remove();
+  }
+}
+
+/**
  * Exibe mensagem de status em um container
  * @param {HTMLElement} container - Elemento container do status
  * @param {HTMLElement} messageEl - Elemento de texto da mensagem
@@ -343,14 +400,14 @@ function createInitialPin(baseUrl, pinInput, confirmInput, msgEl, onSuccess) {
  * @param {string} baseUrl
  * @param {HTMLInputElement} currentPinInput
  * @param {HTMLInputElement} newPinInput
- * @param {HTMLElement} statusEl
+ * @param {function} onResult - Callback com (message, isError)
  */
-function savePinChange(baseUrl, currentPinInput, newPinInput, statusEl) {
+function savePinChange(baseUrl, currentPinInput, newPinInput, onResult) {
   const currentPin = currentPinInput?.value;
   const newPin = newPinInput?.value;
 
   if (!currentPin || !newPin) {
-    showConfigStatus(statusEl, "Preencha todos os campos", true);
+    onResult("Preencha todos os campos", true);
     return;
   }
 
@@ -360,13 +417,13 @@ function savePinChange(baseUrl, currentPinInput, newPinInput, statusEl) {
     body: JSON.stringify({ newPin }),
   })
     .then(data => {
-      showConfigStatus(statusEl, data.status || data.error, !!data.error);
+      onResult(data.status || data.error, !!data.error);
       if (!data.error) {
         currentPinInput.value = "";
         newPinInput.value = "";
       }
     })
-    .catch(err => showConfigStatus(statusEl, getErrorMessage(err), true));
+    .catch(err => onResult(getErrorMessage(err), true));
 }
 
 // ============================================================================
@@ -493,6 +550,7 @@ if (typeof module !== "undefined" && module.exports) {
     apiRequest,
     sendAction,
     getErrorMessage,
+    showToast,
     showStatus,
     updateTimer,
     startStatusPolling,

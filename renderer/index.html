@@ -219,14 +219,7 @@
             </div>
           </div>
 
-          <!-- Status Display -->
-          <div class="card card-status hidden" id="statuscard">
-            <div class="card-body">
-              <div id="timer" class="status-timer"></div>
-              <div id="status" class="status-message"></div>
-            </div>
           </div>
-        </div>
       </div>
 
       <!-- Config Tab -->
@@ -267,8 +260,7 @@
                   </button>
                 </div>
               </div>
-              <p id="configStatus" class="status-message"></p>
-            </div>
+              </div>
           </div>
           <div class="card card-full">
             <div class="card-body">
@@ -368,6 +360,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Timer flutuante (contagem regressiva) -->
+  <div id="timerToast" class="shutdw-timer-toast hidden"></div>
 
   <script src="../shared/api.js"></script>
   <script src="renderer.js"></script>
