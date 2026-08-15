@@ -111,7 +111,7 @@ async function getPublicIpv6(timeout = 5000) {
  */
 async function getIPv6Status(publicLookup = getPublicIpv6, outboundLookup = getOutboundIpv6) {
   const publicIp = await publicLookup();
-  if (publicIp) return { status: "outbound", publicIp };
+  if (publicIp) return { status: "external", publicIp };
 
   const localIp = await outboundLookup();
   if (localIp && !isLinkLocal(localIp)) return { status: "local", ipv6: localIp };

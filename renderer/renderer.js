@@ -247,7 +247,7 @@ function setupIPv6Settings() {
     .then(data => {
       if (!el.ipv6Message) return;
 
-      if (data.status === "outbound") {
+      if (data.status === "external") {
         el.ipv6Message.textContent = "Conectividade IPv6 externa confirmada (saída)";
         el.ipv6Message.style.color = "#27ae60";
         el.ipv6ToggleContainer?.style.setProperty("display", "flex");

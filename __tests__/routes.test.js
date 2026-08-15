@@ -34,7 +34,7 @@ jest.mock("../server/platform", () => ({
 jest.mock("../server/network", () => ({
   getOutboundIp: jest.fn().mockResolvedValue("192.168.1.10"),
   getOutboundIpv6: jest.fn().mockResolvedValue("fe80::1"),
-  getIPv6StatusCached: jest.fn().mockResolvedValue({ status: "outbound", publicIp: "2001:db8::1" }),
+  getIPv6StatusCached: jest.fn().mockResolvedValue({ status: "external", publicIp: "2001:db8::1" }),
   isIPv6: jest.fn((ip) => ip.includes(":") && !ip.includes(".")),
 }));
 
@@ -293,11 +293,11 @@ describe("routes.js — disponibilidade de IPv6 externo", () => {
     app.use(createRoutes(config));
   });
 
-  test("GET /config/ipv6-available devolve status outbound e enabled", async () => {
-    network.getIPv6StatusCached.mockResolvedValue({ status: "outbound", publicIp: "2001:db8::1" });
+  test("GET /config/ipv6-available devolve status external e enabled", async () => {
+    network.getIPv6StatusCached.mockResolvedValue({ status: "external", publicIp: "2001:db8::1" });
     const res = await request(app).get("/config/ipv6-available");
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ status: "outbound", enabled: true, publicIp: "2001:db8::1" });
+    expect(res.body).toMatchObject({ status: "external", enabled: true, publicIp: "2001:db8::1" });
   });
 
   test("GET /config/ipv6-available devolve status local", async () => {
@@ -306,12 +306,12 @@ describe("routes.js — disponibilidade de IPv6 externo", () => {
     expect(res.body).toMatchObject({ status: "local", enabled: true, ipv6: "2001:db8::2" });
   });
 
-  test("GET /ip6 usa endereço público quando outbound", async () => {
-    network.getIPv6StatusCached.mockResolvedValue({ status: "outbound", publicIp: "2001:db8::1" });
+  test("GET /ip6 usa endereço público quando external", async () => {
+    network.getIPv6StatusCached.mockResolvedValue({ status: "external", publicIp: "2001:db8::1" });
     const res = await request(app).get("/ip6");
     expect(res.status).toBe(200);
     expect(res.body.url).toBe("http://[2001:db8::1]:3333");
-    expect(res.body.outbound).toBe(true);
+    expect(res.body.external).toBe(true);
   });
 
   test("GET /ip6 usa endereço local quando apenas local", async () => {
@@ -319,7 +319,7 @@ describe("routes.js — disponibilidade de IPv6 externo", () => {
     const res = await request(app).get("/ip6");
     expect(res.status).toBe(200);
     expect(res.body.url).toBe("http://[2001:db8::2]:3333");
-    expect(res.body.outbound).toBe(false);
+    expect(res.body.external).toBe(false);
   });
 
   test("GET /ip6 retorna 404 quando unavailable", async () => {
@@ -336,9 +336,9 @@ describe("routes.js — disponibilidade de IPv6 externo", () => {
 
   test("GET /config/ipv6-available devolve enabled false quando useIPv6 desabilitado", async () => {
     config.useIPv6 = false;
-    network.getIPv6StatusCached.mockResolvedValue({ status: "outbound", publicIp: "2001:db8::1" });
+    network.getIPv6StatusCached.mockResolvedValue({ status: "external", publicIp: "2001:db8::1" });
     const res = await request(app).get("/config/ipv6-available");
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ status: "outbound", enabled: false });
+    expect(res.body).toMatchObject({ status: "external", enabled: false });
   });
 });

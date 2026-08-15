@@ -63,11 +63,11 @@ describe("network.js — helpers de IPv6", () => {
   });
 
   describe("getIPv6Status", () => {
-    test("outbound quando teste público de saída funciona", async () => {
+    test("external quando teste público funciona", async () => {
       const publicLookup = jest.fn().mockResolvedValue("2001:db8::1");
       const outboundLookup = jest.fn();
       await expect(network.getIPv6Status(publicLookup, outboundLookup)).resolves.toEqual({
-        status: "outbound",
+        status: "external",
         publicIp: "2001:db8::1",
       });
       expect(outboundLookup).not.toHaveBeenCalled();
