@@ -22,7 +22,7 @@ function init() {
   cacheElements();
   loadQRCode(API_URL, el.qr, el.link, (url) => window.open(url, "_blank"));
   checkPinConfigured();
-  window._statusPollingCleanup = startStatusPolling(API_URL, el.timer, el.statusContainer);
+  window._statusPollingCleanup = startStatusPolling(API_URL, el.timerToast, null);
   attachEventListeners(); // CSP-compliant event binding
 }
 
@@ -36,10 +36,7 @@ window.addEventListener("beforeunload", () => {
 function cacheElements() {
   const $ = (id) => document.getElementById(id);
   el.pin = $("pin");
-  el.status = $("status");
-  el.timer = $("timer");
-  el.statusContainer = document.querySelector(".status-container");
-  el.configStatus = $("configStatus");
+  el.timerToast = $("timerToast");
   el.pinModal = $("pinModal");
   el.firstPin = $("firstPin");
   el.firstPinConfirm = $("firstPinConfirm");
@@ -148,7 +145,7 @@ function validatePinInput(input) {
 // STATUS HELPERS
 // ============================================================================
 function displayStatus(message, isError = false) {
-  showStatus(el.statusContainer, el.status, message, isError);
+  showToast(message, isError);
 }
 
 // ============================================================================

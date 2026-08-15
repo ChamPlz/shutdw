@@ -392,29 +392,102 @@ body {
 }
 
 /* ==========================================================================
-   STATUS
+   TOASTS
    ========================================================================== */
-.status-container {
-  text-align: center;
-  margin-top: 20px;
+.shutdw-toast-stack {
+  position: fixed;
+  right: 12px;
+  bottom: 76px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 320px;
+  pointer-events: none;
 }
 
-.status-container.hidden {
-  display: none;
+.shutdw-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--gray-900);
+  border: 1px solid var(--gray-700);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+  animation: toast-in 0.25s ease;
+  pointer-events: auto;
+  max-width: 100%;
 }
 
-.status-timer {
-  font-size: 18px;
+.shutdw-toast.success {
+  color: var(--success);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.shutdw-toast.error {
+  color: var(--error);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.shutdw-toast-text {
+  flex: 1;
+  word-break: break-word;
+}
+
+.shutdw-toast-close {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: var(--gray-700);
+  color: var(--gray-300);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.shutdw-toast-close:hover {
+  background: rgba(239, 68, 68, 0.6);
+  color: var(--white);
+}
+
+.shutdw-toast-leaving {
+  animation: toast-out 0.3s ease forwards;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(20px); }
+}
+
+/* ==========================================================================
+   TIMER TOAST
+   ========================================================================== */
+.shutdw-timer-toast {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1000;
+  font-size: 16px;
   font-weight: 600;
   color: var(--purple-400);
-  margin-bottom: 8px;
-  padding: 12px;
+  text-align: center;
+  padding: 12px 16px;
   background: var(--gray-900);
   border-radius: 12px;
   border: 1px solid var(--gray-700);
-}
-
-.status-timer.active {
+  box-shadow: 0 12px 24px rgba(124, 58, 237, 0.3);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -425,25 +498,6 @@ body {
   50% {
     opacity: 0.7;
   }
-}
-
-.status-message {
-  font-size: 14px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 500;
-}
-
-.status-message.success {
-  color: var(--success);
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.status-message.error {
-  color: var(--error);
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 /* ==========================================================================
