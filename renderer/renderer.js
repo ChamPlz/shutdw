@@ -247,22 +247,31 @@ function setupIPv6Settings() {
     .then(data => {
       if (!el.ipv6Message) return;
 
-      if (data.available) {
-        el.ipv6Message.textContent = "IPv6 está disponível na sua rede";
+      if (data.status === "external") {
+        el.ipv6Message.textContent = "Conectividade IPv6 externa confirmada (saída)";
         el.ipv6Message.style.color = "#27ae60";
         el.ipv6ToggleContainer?.style.setProperty("display", "flex");
         if (el.ipv6Toggle) el.ipv6Toggle.checked = data.enabled;
         if (el.ipv6StatusText) {
           el.ipv6StatusText.textContent = data.enabled
-            ? "✓ IPv6 habilitado - acesso disponível"
-            : "IPv6 desabilitado - sem acesso remoto via IPv6";
+            ? "✓ IPv6 habilitado - conectividade externa confirmada"
+            : "IPv6 desabilitado - sem conectividade externa";
+        }
+        if (data.enabled) loadIPv6Link();
+      } else if (data.status === "local") {
+        el.ipv6Message.textContent = "IPv6 disponível apenas na rede local";
+        el.ipv6Message.style.color = "#e67e22";
+        el.ipv6ToggleContainer?.style.setProperty("display", "flex");
+        if (el.ipv6Toggle) el.ipv6Toggle.checked = data.enabled;
+        if (el.ipv6StatusText) {
+          el.ipv6StatusText.textContent = "Acesso remoto externo não confirmado - apenas IPv6 local";
         }
         if (data.enabled) loadIPv6Link();
       } else {
-        el.ipv6Message.textContent = "IPv6 não está disponível na sua rede";
+        el.ipv6Message.textContent = "IPv6 não está disponível";
         el.ipv6Message.style.color = "#e74c3c";
         if (el.ipv6ToggleContainer) el.ipv6ToggleContainer.style.display = "none";
-        if (el.ipv6StatusText) el.ipv6StatusText.textContent = "Seu dispositivo não tem suporte a IPv6";
+        if (el.ipv6StatusText) el.ipv6StatusText.textContent = "Sem conectividade IPv6";
       }
     })
     .catch(() => {
@@ -276,11 +285,12 @@ function setupIPv6Settings() {
 function toggleIPv6(enabled) {
   apiRequest(API_URL, "/config/ipv6", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-pin": el.pinInput?.value },
     body: JSON.stringify({ useIPv6: enabled }),
   })
     .then(data => {
       if (data.error) {
+        if (el.ipv6Toggle) el.ipv6Toggle.checked = !enabled;
         if (el.ipv6StatusText) {
           el.ipv6StatusText.textContent = "Erro ao atualizar preferência de IPv6";
           el.ipv6StatusText.style.color = "#e74c3c";
@@ -288,8 +298,8 @@ function toggleIPv6(enabled) {
       } else {
         if (el.ipv6StatusText) {
           el.ipv6StatusText.textContent = data.useIPv6
-            ? "✓ IPv6 habilitado - acesso disponível"
-            : "IPv6 desabilitado - sem acesso remoto via IPv6";
+            ? "✓ IPv6 habilitado"
+            : "IPv6 desabilitado - sem conectividade externa";
           el.ipv6StatusText.style.color = "#27ae60";
         }
         if (data.useIPv6) {
@@ -301,9 +311,10 @@ function toggleIPv6(enabled) {
         }
       }
     })
-    .catch(() => {
+    .catch(err => {
+      if (el.ipv6Toggle) el.ipv6Toggle.checked = !enabled;
       if (el.ipv6StatusText) {
-        el.ipv6StatusText.textContent = "Erro de conexão";
+        el.ipv6StatusText.textContent = getErrorMessage(err);
         el.ipv6StatusText.style.color = "#e74c3c";
       }
     });

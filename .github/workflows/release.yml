@@ -43,8 +43,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
+
+      - name: Verify npm security policies
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "$(npm config get ignore-scripts)" = "true" ]
+          [ "$(npm config get min-release-age)" = "7" ]
+          [ "$(npm config get allow-git)" = "none" ]
 
       - name: Install dependencies
         run: npm ci

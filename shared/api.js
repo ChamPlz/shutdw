@@ -100,11 +100,40 @@ async function getCachedIP(baseUrl, route, cacheKey) {
  */
 async function apiRequest(baseUrl, route, options = {}) {
   console.log("[apiRequest]", baseUrl + route);
-  const response = await fetch(`${baseUrl}${route}`, options);
+  let response;
+  try {
+    response = await fetch(`${baseUrl}${route}`, options);
+  } catch (fetchErr) {
+    if (fetchErr && fetchErr.name === "AbortError") throw fetchErr;
+    const err = new Error("Erro de conexão");
+    err.isNetworkError = true;
+    throw err;
+  }
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+    let message = `HTTP ${response.status} ${response.statusText}`;
+    try {
+      const body = await response.json();
+      if (body && typeof body.error === "string" && body.error) {
+        message = body.error;
+      }
+    } catch {
+    }
+    const err = new Error(message);
+    err.status = response.status;
+    err.isHttpError = true;
+    throw err;
   }
   return response.json();
+}
+
+/**
+ * Converte um erro em mensagem exibível, preservando AbortError
+ * @param {Error} err
+ * @returns {string}
+ */
+function getErrorMessage(err) {
+  if (err && (err.name === "AbortError" || err.isHttpError)) return err.message;
+  return "Erro de conexão";
 }
 
 /**
@@ -115,12 +144,16 @@ async function apiRequest(baseUrl, route, options = {}) {
  * @param {function} onResult - Callback com (message, isError)
  */
 function sendAction(baseUrl, route, pin, onResult) {
-  apiRequest(baseUrl, route, {
+  if (!pin) {
+    onResult("Digite o PIN para executar esta ação", true);
+    return;
+  }
+  return apiRequest(baseUrl, route, {
     method: "POST",
     headers: { "x-pin": pin },
   })
     .then(data => onResult(data.status || data.error, !!data.error))
-    .catch(() => onResult("Erro de conexão", true));
+    .catch(err => onResult(getErrorMessage(err), true));
 }
 
 // ============================================================================
@@ -300,8 +333,8 @@ function createInitialPin(baseUrl, pinInput, confirmInput, msgEl, onSuccess) {
       if (msgEl) msgEl.textContent = data.status || "PIN criado com sucesso";
       if (onSuccess) setTimeout(onSuccess, 900);
     })
-    .catch(() => {
-      if (msgEl) msgEl.textContent = "Erro de conexão";
+    .catch(err => {
+      if (msgEl) msgEl.textContent = getErrorMessage(err);
     });
 }
 
@@ -333,7 +366,7 @@ function savePinChange(baseUrl, currentPinInput, newPinInput, statusEl) {
         newPinInput.value = "";
       }
     })
-    .catch(() => showConfigStatus(statusEl, "Erro de conexão", true));
+    .catch(err => showConfigStatus(statusEl, getErrorMessage(err), true));
 }
 
 // ============================================================================
@@ -353,6 +386,10 @@ function scheduleExactTime(baseUrl, timePickerEl, pin, onResult) {
     onResult("Por favor, selecione um horário", true);
     return;
   }
+  if (!pin) {
+    onResult("Digite o PIN para executar esta ação", true);
+    return;
+  }
 
   apiRequest(baseUrl, "/schedule", {
     method: "POST",
@@ -360,7 +397,7 @@ function scheduleExactTime(baseUrl, timePickerEl, pin, onResult) {
     body: JSON.stringify({ time: timeValue }),
   })
     .then(data => onResult(data.status || data.error, !!data.error))
-    .catch(() => onResult("Erro de conexão", true));
+    .catch(err => onResult(getErrorMessage(err), true));
 }
 
 // ============================================================================
@@ -449,4 +486,22 @@ function loadQRIpv6(baseUrl, qrImg, linkEl, openFn) {
     .catch(() => {
       if (linkEl) linkEl.textContent = "Erro ao carregar IPv6";
     });
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    apiRequest,
+    sendAction,
+    getErrorMessage,
+    showStatus,
+    updateTimer,
+    startStatusPolling,
+    showConfigStatus,
+    createInitialPin,
+    savePinChange,
+    scheduleExactTime,
+    loadQRCode,
+    loadQRIpv6,
+    getCachedIP,
+  };
 }

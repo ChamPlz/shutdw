@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const auth = require("./auth");
 const { loadConfig, saveConfig } = require("./config");
-const { getOutboundIp, getOutboundIpv6, hasIPv6Available, isIPv6 } = require("./network");
+const { getOutboundIp, getIPv6StatusCached, isIPv6 } = require("./network");
 const { scheduleShutdown, cancelShutdown } = require("./shutdown");
 const { exec } = require("child_process");
 const platform = require("./platform");
@@ -84,8 +84,9 @@ function createRoutes(config) {
     res.json({ configured: !!currentConfig.pin });
   });
 
-  router.get('/config/ipv6-available', (req, res) => {
-    res.json({ available: hasIPv6Available(), enabled: config.useIPv6 });
+  router.get('/config/ipv6-available', async (req, res) => {
+    const status = await getIPv6StatusCached();
+    res.json({ ...status, enabled: config.useIPv6 });
   });
 
   // ==========================================================================
@@ -157,11 +158,12 @@ function createRoutes(config) {
       res.setHeader("Cache-Control", "public, max-age=300");
       return res.json(cached);
     }
-    const ipv6Address = await getOutboundIpv6();
+    const status = await getIPv6StatusCached();
+    const ipv6Address = status.publicIp || status.ipv6;
     if (!ipv6Address) {
       return res.status(404).json({ error: "IPv6 não disponível" });
     }
-    const data = { ipv6: ipv6Address, url: `http://[${ipv6Address}]:${PORT}`, enabled: true };
+    const data = { ipv6: ipv6Address, url: `http://[${ipv6Address}]:${PORT}`, enabled: true, external: status.status === "external" };
     setCachedIP("ipv6", data);
     res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=30");
     res.json(data);
