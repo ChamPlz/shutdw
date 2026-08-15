@@ -31,7 +31,7 @@ function init() {
   setupAbout();
   loadQRCode(API_URL, el.qr, el.link, (url) => window.api?.openExternal(url));
   checkPinConfigured();
-  statusPollingCleanup = startStatusPolling(API_URL, el.timer, el.statusCard);
+  statusPollingCleanup = startStatusPolling(API_URL, el.timerToast, null);
   attachEventListeners(); // CSP-compliant event binding
 
   // Cleanup ao fechar janela
@@ -45,10 +45,7 @@ function init() {
 function cacheElements() {
   const $ = (id) => document.getElementById(id);
   el.pinInput = $("pin");
-  el.status = $("status");
-  el.statusCard = $("statuscard");
-  el.timer = $("timer");
-  el.configStatus = $("configStatus");
+  el.timerToast = $("timerToast");
   el.pinModal = $("pinModal");
   el.firstPin = $("firstPin");
   el.firstPinConfirm = $("firstPinConfirm");
@@ -148,7 +145,7 @@ function validatePinInput(input) {
 // STATUS HELPERS (delegam para shared/api.js)
 // ============================================================================
 function displayStatus(message, isError = false) {
-  showStatus(el.statusCard, el.status, message, isError);
+  showToast(message, isError);
 }
 
 // ============================================================================
@@ -175,22 +172,22 @@ function handleCreateFirstPin() {
 async function resetPinDesktop() {
   const newPin = el.newPin?.value;
   if (!newPin || newPin.length < 4) {
-    showConfigStatus(el.configStatus, "Novo PIN precisa ter ao menos 4 caracteres", true);
+    showToast("Novo PIN precisa ter ao menos 4 caracteres", true);
     return;
   }
   if (!window.api?.resetPin) {
-    showConfigStatus(el.configStatus, "Funcionalidade disponível somente no cliente desktop", true);
+    showToast("Funcionalidade disponível somente no cliente desktop", true);
     return;
   }
   try {
     const result = await window.api.resetPin(newPin);
-    showConfigStatus(el.configStatus, result.status || "PIN redefinido com sucesso", !!result.error);
+    showToast(result.status || "PIN redefinido com sucesso", !!result.error);
     if (!result.error) {
       if (el.currentPin) el.currentPin.value = "";
       if (el.newPin) el.newPin.value = "";
     }
   } catch {
-    showConfigStatus(el.configStatus, "Erro ao redefinir PIN", true);
+    showToast("Erro ao redefinir PIN", true);
   }
 }
 
