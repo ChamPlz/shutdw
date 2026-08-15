@@ -1,6 +1,12 @@
 const os = require("os");
 const dgram = require("dgram");
 
+const IPV6_TEST_ENDPOINT = "https://api6.ipify.org";
+const IPV6_STATUS_TTL = 5 * 60 * 1000;
+
+let ipv6StatusCache = null;
+let ipv6StatusCacheTime = 0;
+
 /**
  * Verifica se um IP é IPv6
  * @param {string} ip
@@ -8,6 +14,15 @@ const dgram = require("dgram");
  */
 function isIPv6(ip) {
   return ip.includes(':') && !ip.includes('.');
+}
+
+/**
+ * Verifica se um endereço IPv6 é link-local (fe80::/10)
+ * @param {string|null} ip
+ * @returns {boolean}
+ */
+function isLinkLocal(ip) {
+  return typeof ip === "string" && /^fe[89ab][0-9a-f]:/i.test(ip);
 }
 
 /**
@@ -67,6 +82,63 @@ async function getOutboundIpv6(timeout = 1000) {
 }
 
 /**
+ * Obtém o IP público IPv6 via requisição HTTPS a um serviço só-IPv6
+ * @param {number} timeout - Timeout em ms
+ * @returns {Promise<string|null>}
+ */
+async function getPublicIpv6(timeout = 5000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(IPV6_TEST_ENDPOINT, { signal: controller.signal });
+    if (!response.ok) return null;
+    const ip = (await response.text()).trim();
+    return isIPv6(ip) ? ip : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Classifica a disponibilidade de IPv6: externo, apenas local ou indisponível
+ * @param {Function} [publicLookup] - Função do teste externo (injetável p/ teste)
+ * @param {Function} [outboundLookup] - Função que devolve endereço de saída (injetável p/ teste)
+ * @returns {Promise<{status: string, publicIp?: string, ipv6?: string}>}
+ */
+async function getIPv6Status(publicLookup = getPublicIpv6, outboundLookup = getOutboundIpv6) {
+  const publicIp = await publicLookup();
+  if (publicIp) return { status: "external", publicIp };
+
+  const localIp = await outboundLookup();
+  if (localIp && !isLinkLocal(localIp)) return { status: "local", ipv6: localIp };
+
+  return { status: "unavailable" };
+}
+
+/**
+ * Retorna o status de IPv6 com cache em memória (TTL 5 min)
+ * @returns {Promise<{status: string, publicIp?: string, ipv6?: string}>}
+ */
+async function getIPv6StatusCached() {
+  if (ipv6StatusCache && Date.now() - ipv6StatusCacheTime < IPV6_STATUS_TTL) {
+    return ipv6StatusCache;
+  }
+  ipv6StatusCache = await getIPv6Status();
+  ipv6StatusCacheTime = Date.now();
+  return ipv6StatusCache;
+}
+
+/**
+ * Limpa o cache de status de IPv6 (usado em testes)
+ */
+function resetIpv6StatusCache() {
+  ipv6StatusCache = null;
+  ipv6StatusCacheTime = 0;
+}
+
+/**
  * Verifica se há IPv6 disponível nas interfaces de rede
  * @returns {boolean}
  */
@@ -84,7 +156,12 @@ function hasIPv6Available() {
 
 module.exports = {
   isIPv6,
+  isLinkLocal,
   getOutboundIp,
   getOutboundIpv6,
+  getPublicIpv6,
+  getIPv6Status,
+  getIPv6StatusCached,
+  resetIpv6StatusCache,
   hasIPv6Available,
 };
