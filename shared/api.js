@@ -103,7 +103,8 @@ async function apiRequest(baseUrl, route, options = {}) {
   let response;
   try {
     response = await fetch(`${baseUrl}${route}`, options);
-  } catch {
+  } catch (fetchErr) {
+    if (fetchErr && fetchErr.name === "AbortError") throw fetchErr;
     const err = new Error("Erro de conexão");
     err.isNetworkError = true;
     throw err;
@@ -126,6 +127,16 @@ async function apiRequest(baseUrl, route, options = {}) {
 }
 
 /**
+ * Converte um erro em mensagem exibível, preservando AbortError
+ * @param {Error} err
+ * @returns {string}
+ */
+function getErrorMessage(err) {
+  if (err && (err.name === "AbortError" || err.isHttpError)) return err.message;
+  return "Erro de conexão";
+}
+
+/**
  * Envia uma ação POST autenticada por PIN
  * @param {string} baseUrl
  * @param {string} route
@@ -142,7 +153,7 @@ function sendAction(baseUrl, route, pin, onResult) {
     headers: { "x-pin": pin },
   })
     .then(data => onResult(data.status || data.error, !!data.error))
-    .catch(err => onResult(err.isHttpError ? err.message : "Erro de conexão", true));
+    .catch(err => onResult(getErrorMessage(err), true));
 }
 
 // ============================================================================
@@ -323,7 +334,7 @@ function createInitialPin(baseUrl, pinInput, confirmInput, msgEl, onSuccess) {
       if (onSuccess) setTimeout(onSuccess, 900);
     })
     .catch(err => {
-      if (msgEl) msgEl.textContent = err.isHttpError ? err.message : "Erro de conexão";
+      if (msgEl) msgEl.textContent = getErrorMessage(err);
     });
 }
 
@@ -355,7 +366,7 @@ function savePinChange(baseUrl, currentPinInput, newPinInput, statusEl) {
         newPinInput.value = "";
       }
     })
-    .catch(err => showConfigStatus(statusEl, err.isHttpError ? err.message : "Erro de conexão", true));
+    .catch(err => showConfigStatus(statusEl, getErrorMessage(err), true));
 }
 
 // ============================================================================
@@ -386,7 +397,7 @@ function scheduleExactTime(baseUrl, timePickerEl, pin, onResult) {
     body: JSON.stringify({ time: timeValue }),
   })
     .then(data => onResult(data.status || data.error, !!data.error))
-    .catch(err => onResult(err.isHttpError ? err.message : "Erro de conexão", true));
+    .catch(err => onResult(getErrorMessage(err), true));
 }
 
 // ============================================================================
@@ -481,6 +492,7 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     apiRequest,
     sendAction,
+    getErrorMessage,
     showStatus,
     updateTimer,
     startStatusPolling,

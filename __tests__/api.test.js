@@ -51,6 +51,13 @@ describe("shared/api.js — mensagens de erro", () => {
     });
   });
 
+  test("apiRequest preserva o AbortError original", async () => {
+    const abortError = Object.assign(new Error("The operation was aborted"), { name: "AbortError" });
+    global.fetch = jest.fn().mockRejectedValue(abortError);
+
+    await expect(apiRequest("", "/status")).rejects.toBe(abortError);
+  });
+
   test("sendAction com PIN vazio informa que o PIN é necessário", async () => {
     const onResult = jest.fn();
     sendAction("", "/shutdown", "", onResult);
