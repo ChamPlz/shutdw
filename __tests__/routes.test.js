@@ -252,4 +252,21 @@ describe("routes.js — auth e bypass de localhost (BUG-03/BUG-04)", () => {
 
     expect(res.status).toBe(200);
   });
+
+  test("POST /config/ipv6 sem PIN é rejeitado com 401", async () => {
+    const res = await request(app).post("/config/ipv6").send({ useIPv6: true });
+
+    expect(res.status).toBe(401);
+    expect(config.useIPv6).toBe(false);
+  });
+
+  test("POST /config/ipv6 com PIN correto atualiza preferência", async () => {
+    const res = await request(app)
+      .post("/config/ipv6")
+      .set("x-pin", "1234")
+      .send({ useIPv6: true });
+
+    expect(res.status).toBe(200);
+    expect(config.useIPv6).toBe(true);
+  });
 });

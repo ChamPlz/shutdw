@@ -276,11 +276,12 @@ function setupIPv6Settings() {
 function toggleIPv6(enabled) {
   apiRequest(API_URL, "/config/ipv6", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "x-pin": el.pinInput?.value },
     body: JSON.stringify({ useIPv6: enabled }),
   })
     .then(data => {
       if (data.error) {
+        if (el.ipv6Toggle) el.ipv6Toggle.checked = !enabled;
         if (el.ipv6StatusText) {
           el.ipv6StatusText.textContent = "Erro ao atualizar preferência de IPv6";
           el.ipv6StatusText.style.color = "#e74c3c";
@@ -301,9 +302,10 @@ function toggleIPv6(enabled) {
         }
       }
     })
-    .catch(() => {
+    .catch(err => {
+      if (el.ipv6Toggle) el.ipv6Toggle.checked = !enabled;
       if (el.ipv6StatusText) {
-        el.ipv6StatusText.textContent = "Erro de conexão";
+        el.ipv6StatusText.textContent = err.isHttpError ? err.message : "Erro de conexão";
         el.ipv6StatusText.style.color = "#e74c3c";
       }
     });
