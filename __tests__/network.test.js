@@ -42,6 +42,19 @@ describe("network.js — helpers de IPv6", () => {
       global.fetch = jest.fn().mockRejectedValue(new TypeError("Failed to fetch"));
       await expect(network.getPublicIpv6()).resolves.toBeNull();
     });
+
+    test("retorna null quando o fetch é abortado pelo timeout", async () => {
+      jest.useFakeTimers();
+      global.fetch = jest.fn((_url, { signal }) =>
+        new Promise((_resolve, reject) => {
+          signal.addEventListener("abort", () => reject(new Error("The operation was aborted")));
+        })
+      );
+      const promise = network.getPublicIpv6(5000);
+      jest.advanceTimersByTime(5000);
+      await expect(promise).resolves.toBeNull();
+      jest.useRealTimers();
+    });
   });
 
   describe("getIPv6Status", () => {
@@ -83,6 +96,18 @@ describe("network.js — helpers de IPv6", () => {
       const b = await network.getIPv6StatusCached();
       expect(a).toBe(b);
       expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    test("expira o cache após o TTL de 5 minutos", async () => {
+      const now = Date.now();
+      jest.spyOn(Date, "now").mockReturnValue(now);
+      global.fetch = jest.fn().mockResolvedValue({ ok: true, text: async () => "2001:db8::1" });
+      await network.getIPv6StatusCached();
+      await network.getIPv6StatusCached();
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      Date.now.mockReturnValue(now + 5 * 60 * 1000 + 1);
+      await network.getIPv6StatusCached();
+      expect(global.fetch).toHaveBeenCalledTimes(2);
     });
   });
 });

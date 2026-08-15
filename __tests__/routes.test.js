@@ -333,4 +333,12 @@ describe("routes.js — disponibilidade de IPv6 externo", () => {
     const res = await request(app).get("/ip6");
     expect(res.status).toBe(403);
   });
+
+  test("GET /config/ipv6-available devolve enabled false quando useIPv6 desabilitado", async () => {
+    config.useIPv6 = false;
+    network.getIPv6StatusCached.mockResolvedValue({ status: "external", publicIp: "2001:db8::1" });
+    const res = await request(app).get("/config/ipv6-available");
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ status: "external", enabled: false });
+  });
 });
