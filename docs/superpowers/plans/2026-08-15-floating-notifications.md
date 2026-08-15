@@ -264,7 +264,7 @@ Adicionar no mesmo lugar:
   bottom: 76px;
   z-index: 1000;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: flex-end;
   gap: 8px;
   max-width: 320px;
@@ -524,7 +524,7 @@ Adicionar no mesmo lugar:
   bottom: 76px;
   z-index: 1000;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: flex-end;
   gap: 8px;
   max-width: 320px;
