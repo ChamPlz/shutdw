@@ -163,7 +163,7 @@ function handleScheduleExact() {
 }
 
 function handleSavePin() {
-  savePinChange(API_URL, el.currentPin, el.newPin, el.configStatus);
+  savePinChange(API_URL, el.currentPin, el.newPin, displayStatus);
 }
 
 function handleCreateFirstPin() {
