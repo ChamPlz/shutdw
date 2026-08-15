@@ -7,3 +7,4 @@ release.bat
 /.claude
 /.agents
 /coverage
+/.worktrees
