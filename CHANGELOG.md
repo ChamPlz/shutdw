@@ -4,6 +4,32 @@
 
 ---
 
+# 1.4.0
+## Change Log
+### Version v1.4.0 - 2026-08-15 — Notificações Flutuantes & Overlay com Visual de Toast
+
+#### Added
+- **Notificações flutuantes (toasts)** em desktop e web (`shared/api.js`)
+  - `showToast` compartilhado: toasts fixos no canto inferior direito com auto-dismiss (4s sucesso, 6s erro) e botão "×"
+  - Empilhamento com a mais nova no topo (máx. 5) e `aria-live` para acessibilidade
+  - Timer de contagem regressiva agora é um toast separado (`#timerToast`)
+- **Overlay de contagem regressiva com visual de toast** (`overlay/`)
+  - Barra escura translúcida com borda roxa e cantos arredondados, tempo em roxo
+  - Botão "×" no canto da barra (esconde a janela, mantém o desligamento); "cancelar" cancela o shutdown
+- **Teste externo de IPv6** para acesso remoto (PR #16)
+  - Status de IPv6 em `external|local|unavailable` via `/config/ipv6-available`; `/ip6` passa a usar o IP público
+
+#### Changed
+- `savePinChange` agora recebe callback de resultado; `showStatus`/`showConfigStatus` mantidas mas sem uso nas UIs
+- Toda a lógica de toasts reutilizada entre desktop e web via código compartilhado
+- CSS dos toasts usa `overflow-wrap: anywhere` no lugar do `word-break: break-word` obsoleto
+
+#### Developer Experience
+- **Suíte de testes ampliada para 85 testes** (9 suites) — toasts, callback de PIN, IPv6 externo
+- Especificações e planos de implementação documentados em `docs/superpowers/`
+
+---
+
 # 1.3.0
 ## Change Log
 ### Version v1.3.0 - 2026-08-14 — Robustez, Segurança & Electron 43
