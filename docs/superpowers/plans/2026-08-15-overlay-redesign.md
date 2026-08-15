@@ -12,11 +12,11 @@
 
 - Alvo: a janela overlay separada (`overlay/`), NÃO o `#timerToast` do app.
 - "×" continua apenas escondendo a janela (desligamento continua); "cancelar" cancela o shutdown.
-- Layout: barra com tempo + "cancelar" lado a lado, "×" no canto superior direito.
-- Barra: `background: rgba(15, 23, 42, 0.92)`, `border: 1px solid rgba(167, 139, 250, 0.4)`, `border-radius: 12px`, sombra roxa, padding `12px 16px`, animação `pulse` (opacidade 1 → 0.7).
+- Layout: barra com tempo + "cancelar" lado a lado, "×" no canto superior direito **da barra**.
+- Barra (`.pill`): `position: relative`, `background: rgba(15, 23, 42, 0.92)`, `border: 1px solid rgba(167, 139, 250, 0.4)`, `border-radius: 12px`, sombra roxa, padding `12px 16px`. Sem animação.
 - Tempo (`#time`): cor `#a78bfa`, bold, `font-variant-numeric: tabular-nums`, sem gradiente branco.
 - Cancelar (`.cancel`): pílula gradiente roxo (`#6b46c1` → `#7c3aed`), texto branco.
-- "×" (`.close`): círculo no canto superior direito, fundo `rgba(15, 23, 42, 0.8)` + borda roxa, `×` branco, hover vermelho.
+- "×" (`.close`): círculo `position: absolute` no canto superior direito da barra (`top: -9px; right: -9px`), fundo `rgba(15, 23, 42, 0.8)` + borda roxa, `×` branco, hover vermelho.
 - `body` = `-webkit-app-region: drag`; botões = `no-drag`.
 - Janela mantém `300x120` (sem mudanças em `overlay/overlayWindow.js`).
 - `npm test` deve passar (o `client-require.test.js` NÃO cobre `overlay/`).
@@ -36,14 +36,14 @@
 
 - [ ] **Step 1: Reescrever o corpo de `overlay/overlay.html`**
 
-Substituir o bloco dentro de `<body>` por (removendo o wrapper `.pill-inner`):
+Substituir o bloco dentro de `<body>` por (removendo o wrapper `.pill-inner` e
+aninhando o `#btnClose` dentro da barra `.pill`):
 
 ```html
 <body>
   <div class="overlay">
-    <button id="btnClose" class="close" title="Fechar">×</button>
-
     <div class="pill">
+      <button id="btnClose" class="close" title="Fechar">×</button>
       <div id="time">--:--</div>
       <button id="btnCancel" class="cancel">cancelar</button>
     </div>
@@ -97,6 +97,7 @@ body {
    TOAST BAR
    ========================================================================== */
 .pill {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -105,16 +106,6 @@ body {
   border: 1px solid rgba(167, 139, 250, 0.4);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
 }
 
 /* ==========================================================================
@@ -160,8 +151,8 @@ body {
    ========================================================================== */
 .close {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: -9px;
+  right: -9px;
   width: 26px;
   height: 26px;
   background: rgba(15, 23, 42, 0.8);
@@ -194,9 +185,9 @@ Expected: todas as suítes passam (9/9, 85/85). Nenhum teste cobre `overlay/`, m
 
 Run: `npm run dev`
 Expected:
-- Agendar um desligamento (ex.: 10 min): a janela overlay abre com a nova barra toast escura com borda roxa, `#time` em roxo mostrando `10:00`, animação pulse.
+- Agendar um desligamento (ex.: 10 min): a janela overlay abre com a nova barra toast escura com borda roxa, `#time` em roxo mostrando `10:00`, sem animação.
 - Clicar "cancelar": o overlay fecha E o desligamento é cancelado (o `#timerToast` do app também some).
-- Agendar novamente e clicar no "×": o overlay fecha, mas o desligamento continua (reabrir/verificar via `/status` ou o `#timerToast` do app segue contando).
+- Agendar novamente e clicar no "×" (no canto da barra): o overlay fecha, mas o desligamento continua (reabrir/verificar via `/status` ou o `#timerToast` do app segue contando).
 
 - [ ] **Step 5: Commit**
 

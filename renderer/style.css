@@ -675,7 +675,8 @@ body::before {
 
 .shutdw-toast-text {
   flex: 1;
-  word-break: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
 }
 
 .shutdw-toast-close {
